@@ -2,7 +2,9 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-
+from dotenv import load_dotenv
+load_dotenv()
+import os
 from app.database.database import Base, engine, get_db
 from app.models import User, Meeting, Participant
 from app.api.auth import router as auth_router
@@ -10,6 +12,8 @@ from app.api.meetings import router as meetings_router
 from app.api.ws import router as ws_router
 
 from sqlalchemy import inspect
+
+CLIENT_URL = os.getenv("FRONTEND_URL")
 
 def ensure_database_schema():
     """Ensures existing database tables contain required columns (e.g. host_id in meetings)."""
@@ -39,6 +43,7 @@ origins = [
     "http://127.0.0.1:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3001",
+    CLIENT_URL
 ]
 
 app.add_middleware(
