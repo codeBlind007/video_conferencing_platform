@@ -156,23 +156,24 @@ export default function PreJoinPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between p-4 sm:p-6">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between p-3 sm:p-6">
       {/* Top Header */}
       <header className="max-w-5xl mx-auto w-full flex items-center justify-between py-2">
         <button
           onClick={() => router.push("/dashboard")}
-          className="flex items-center space-x-2 text-slate-500 hover:text-slate-900 transition-colors text-sm font-semibold"
+          className="flex items-center space-x-2 text-slate-500 hover:text-slate-900 transition-colors text-xs sm:text-sm font-semibold"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Dashboard</span>
         </button>
-        <span className="text-xs text-slate-600 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-xs">
-          Meeting ID: <strong className="text-slate-900 font-mono">{meetingId}</strong>
+        <span className="text-[11px] sm:text-xs text-slate-600 bg-white px-2.5 sm:px-3 py-1 rounded-full border border-slate-200 shadow-xs">
+          <span className="hidden sm:inline">Meeting ID: </span>
+          <strong className="text-slate-900 font-mono">{meetingId}</strong>
         </span>
       </header>
 
       {/* Center Preview Content */}
-      <main className="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-12 gap-8 items-center my-auto py-6">
+      <main className="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-center my-auto py-4 sm:py-6">
         {/* Left: Camera Preview Tile (7 Cols) */}
         <div className="md:col-span-7 space-y-4">
           <div className="relative aspect-video bg-slate-900 border border-slate-200 rounded-3xl overflow-hidden shadow-xl flex items-center justify-center">
@@ -186,32 +187,32 @@ export default function PreJoinPage() {
               />
             ) : (
               <div className="text-center p-6">
-                <div className="w-20 h-20 bg-[#0E71EB] rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-3 shadow-xl">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#0E71EB] rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl font-bold mx-auto mb-3 shadow-xl">
                   {displayName ? displayName.charAt(0).toUpperCase() : "U"}
                 </div>
-                <p className="text-sm font-medium text-slate-300">Camera is Off</p>
+                <p className="text-xs sm:text-sm font-medium text-slate-300">Camera is Off</p>
               </div>
             )}
 
             {/* Media Toggles Overlay */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center space-x-3 bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-xl">
+            <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center space-x-2 sm:space-x-3 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl border border-white/10 shadow-xl">
               <button
                 onClick={toggleMic}
-                className={`p-3 rounded-xl transition-colors ${
+                className={`p-2.5 sm:p-3 rounded-xl transition-colors ${
                   isMicOn ? "bg-slate-800 text-white hover:bg-slate-700" : "bg-red-600 text-white"
                 }`}
                 title={isMicOn ? "Mute Microphone" : "Unmute Microphone"}
               >
-                {isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+                {isMicOn ? <Mic className="w-4 h-4 sm:w-5 sm:h-5" /> : <MicOff className="w-4 h-4 sm:w-5 sm:h-5" />}
               </button>
               <button
                 onClick={toggleCamera}
-                className={`p-3 rounded-xl transition-colors ${
+                className={`p-2.5 sm:p-3 rounded-xl transition-colors ${
                   isCameraOn ? "bg-slate-800 text-white hover:bg-slate-700" : "bg-red-600 text-white"
                 }`}
                 title={isCameraOn ? "Stop Video" : "Start Video"}
               >
-                {isCameraOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+                {isCameraOn ? <Video className="w-4 h-4 sm:w-5 sm:h-5" /> : <VideoOff className="w-4 h-4 sm:w-5 sm:h-5" />}
               </button>
             </div>
           </div>
@@ -224,9 +225,9 @@ export default function PreJoinPage() {
         </div>
 
         {/* Right: Join Info & Display Name Form (5 Cols) */}
-        <div className="md:col-span-5 bg-white border border-slate-200 rounded-3xl p-6 space-y-6 shadow-xl">
+        <div className="md:col-span-5 bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 space-y-5 sm:space-y-6 shadow-xl">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{meeting.title}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{meeting.title}</h1>
             {meeting.description && <p className="text-xs text-slate-500 mt-1">{meeting.description}</p>}
             <p className="text-xs text-slate-500 mt-2.5 flex items-center space-x-1">
               <span>Hosted by:</span>
@@ -245,13 +246,13 @@ export default function PreJoinPage() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Enter your name"
                 required
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0E71EB] focus:bg-white transition-colors"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 sm:py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0E71EB] focus:bg-white transition-colors"
               />
             </div>
 
             <button
               onClick={handleJoin}
-              className="w-full bg-[#0E71EB] hover:bg-[#005CE6] text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-all shadow-lg shadow-[#0E71EB]/20"
+              className="w-full bg-[#0E71EB] hover:bg-[#005CE6] text-white py-3 sm:py-3.5 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-all shadow-lg shadow-[#0E71EB]/20"
             >
               <LogIn className="w-5 h-5" />
               <span>Join Meeting Now</span>
@@ -260,7 +261,7 @@ export default function PreJoinPage() {
         </div>
       </main>
 
-      <footer className="text-center text-xs text-slate-400 py-2">
+      <footer className="text-center text-[11px] sm:text-xs text-slate-400 py-2">
         Zoom Clone Video Conferencing • End-to-End Encrypted WebRTC
       </footer>
     </div>

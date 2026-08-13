@@ -32,20 +32,20 @@ export function VideoGrid({
 }: VideoGridProps) {
   const totalCount = 1 + remoteStreams.length;
 
-  // Compute CSS grid columns based on number of participants
+  // Compute CSS grid columns based on number of participants & responsive breakpoints
   let gridCols = "grid-cols-1";
   if (totalCount === 2) {
-    gridCols = "grid-cols-1 md:grid-cols-2";
+    gridCols = "grid-cols-1 sm:grid-cols-2";
   } else if (totalCount >= 3 && totalCount <= 4) {
-    gridCols = "grid-cols-2";
+    gridCols = "grid-cols-1 sm:grid-cols-2";
   } else if (totalCount >= 5 && totalCount <= 9) {
-    gridCols = "grid-cols-2 lg:grid-cols-3";
+    gridCols = "grid-cols-2 sm:grid-cols-3";
   } else if (totalCount > 9) {
-    gridCols = "grid-cols-3 lg:grid-cols-4";
+    gridCols = "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4";
   }
 
   return (
-    <div className={`grid ${gridCols} gap-3 w-full h-full p-3 max-w-7xl mx-auto min-h-0 min-w-0 items-center justify-center overflow-hidden`}>
+    <div className={`grid ${gridCols} gap-2 sm:gap-3 w-full h-full p-2 sm:p-4 max-w-7xl mx-auto min-h-0 min-w-0 items-center justify-center overflow-hidden`}>
       {/* Local Video Tile */}
       <div className="w-full h-full min-h-0 min-w-0 flex items-center justify-center overflow-hidden">
         <ParticipantVideo

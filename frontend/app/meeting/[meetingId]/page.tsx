@@ -538,14 +538,14 @@ export default function MeetingRoomPage() {
   return (
     <div className="h-screen h-[100dvh] w-screen bg-[#0F172A] text-white flex flex-col overflow-hidden select-none">
       {/* Top Header */}
-      <header className="h-12 shrink-0 bg-[#1E293B] px-4 border-b border-slate-700/60 flex items-center justify-between z-20">
-        <div className="flex items-center space-x-3">
-          <span className="text-sm font-bold text-white tracking-tight">{meeting.title}</span>
-          <span className="bg-slate-800 text-xs font-mono px-2.5 py-0.5 rounded-full text-slate-300 border border-slate-700">
-            ID: {meetingId}
+      <header className="h-12 shrink-0 bg-[#1E293B] px-3 sm:px-4 border-b border-slate-700/60 flex items-center justify-between z-20">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+          <span className="text-xs sm:text-sm font-bold text-white tracking-tight truncate max-w-[140px] sm:max-w-xs md:max-w-md">{meeting.title}</span>
+          <span className="bg-slate-800 text-[10px] sm:text-xs font-mono px-2 py-0.5 sm:px-2.5 rounded-full text-slate-300 border border-slate-700 shrink-0">
+            <span className="hidden sm:inline">ID: </span>{meetingId}
           </span>
         </div>
-        <div className="text-xs text-slate-300">
+        <div className="text-[11px] sm:text-xs text-slate-300 shrink-0">
           Participants: <strong className="text-white">{1 + remoteStreams.length}</strong>
         </div>
       </header>
@@ -567,7 +567,7 @@ export default function MeetingRoomPage() {
 
         {/* Side Panel: Chat or Participants */}
         {(isParticipantsOpen || isChatOpen) && (
-          <div className="w-full sm:w-80 md:w-96 shrink-0 h-full min-h-0 border-l border-slate-700 bg-white text-slate-900 flex flex-col overflow-hidden z-20 absolute sm:relative inset-y-0 right-0 shadow-2xl">
+          <div className="w-full sm:w-80 md:w-96 shrink-0 h-full min-h-0 border-l border-slate-700 bg-white text-slate-900 flex flex-col overflow-hidden z-30 absolute sm:relative inset-y-0 right-0 shadow-2xl">
             {isParticipantsOpen && (
               <ParticipantsPanel
                 isOpen={isParticipantsOpen}
