@@ -11,7 +11,7 @@ interface ParticipantsPanelProps {
   currentUserId: number;
   hostUserId: number;
   onMuteAll?: () => void;
-  onMuteParticipant?: (participantId: number, userId: number) => void;
+  onMuteParticipant?: (participantId: number, userId: number, isMuted: boolean) => void;
   onRemoveParticipant?: (participantId: number) => void;
 }
 
@@ -76,36 +76,41 @@ export function ParticipantsPanel({
                 </div>
               </div>
 
-              {/* Status Icons & Host Actions */}
+              {/* Status Icon & Host Controls */}
               <div className="flex items-center space-x-2 shrink-0">
-                {p.is_muted ? (
-                  <MicOff className="w-4 h-4 text-red-500" />
+                {isHost && !isParticipantHost && !isSelf && onMuteParticipant ? (
+                  <button
+                    onClick={() => onMuteParticipant(p.id, p.user_id, !p.is_muted)}
+                    title={p.is_muted ? "Click to Unmute Participant" : "Click to Mute Participant"}
+                    className={`p-1.5 rounded-xl border transition-all ${
+                      p.is_muted
+                        ? "bg-red-50 border-red-200 text-red-600 hover:bg-red-100"
+                        : "bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100"
+                    }`}
+                  >
+                    {p.is_muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </button>
                 ) : (
-                  <Mic className="w-4 h-4 text-emerald-600" />
+                  <div
+                    className={`p-1.5 rounded-xl border ${
+                      p.is_muted
+                        ? "bg-red-50 border-red-200 text-red-600"
+                        : "bg-emerald-50 border-emerald-200 text-emerald-600"
+                    }`}
+                  >
+                    {p.is_muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </div>
                 )}
 
-                {/* Host Controls for Non-Host Participants */}
-                {isHost && !isParticipantHost && !isSelf && (
-                  <div className="flex items-center space-x-1 pl-1 border-l border-slate-200">
-                    {!p.is_muted && onMuteParticipant && (
-                      <button
-                        onClick={() => onMuteParticipant(p.id, p.user_id)}
-                        title="Mute participant"
-                        className="p-1 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                      >
-                        <VolumeX className="w-4 h-4" />
-                      </button>
-                    )}
-                    {onRemoveParticipant && (
-                      <button
-                        onClick={() => onRemoveParticipant(p.id)}
-                        title="Remove participant"
-                        className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <UserX className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
+                {/* Remove Participant Button */}
+                {isHost && !isParticipantHost && !isSelf && onRemoveParticipant && (
+                  <button
+                    onClick={() => onRemoveParticipant(p.id)}
+                    title="Remove participant"
+                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                  >
+                    <UserX className="w-4 h-4" />
+                  </button>
                 )}
               </div>
             </div>

@@ -1,7 +1,7 @@
 import secrets
 import string
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, desc
 
@@ -463,10 +463,11 @@ async def mute_all_participants(
 async def mute_single_participant(
     meeting_id: str,
     participant_id: int,
+    is_muted: bool | None = Query(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Host control: Mutes a specific participant in a meeting."""
+    """Host control: Mutes or unmutes a specific participant in a meeting."""
     meeting = db.query(Meeting).filter(Meeting.meeting_id == meeting_id).first()
     if not meeting:
         raise HTTPException(
@@ -477,7 +478,7 @@ async def mute_single_participant(
     if meeting.host_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the meeting host can mute a participant"
+            detail="Only the meeting host can modify participant mute state"
         )
 
     participant = db.query(Participant).filter(
@@ -492,7 +493,9 @@ async def mute_single_participant(
             detail="Participant not found or inactive"
         )
 
-    participant.is_muted = True
+    # Toggle or set explicit mute state
+    new_mute_state = is_muted if is_muted is not None else not participant.is_muted
+    participant.is_muted = new_mute_state
     db.commit()
 
     # Notify WebSocket clients in real-time
@@ -502,11 +505,14 @@ async def mute_single_participant(
             "type": "mute-participant",
             "target_user_id": participant.user_id,
             "participant_id": participant.id,
-            "is_muted": True
+            "is_muted": new_mute_state
         }
     )
 
-    return {"message": f"Participant {participant.display_name} muted"}
+    return {
+        "message": f"Participant {participant.display_name} mute state updated to {new_mute_state}",
+        "is_muted": new_mute_state
+    }
 
 
 @router.delete("/{meeting_id}/participants/{participant_id}")

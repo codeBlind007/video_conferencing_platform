@@ -342,18 +342,19 @@ export default function MeetingRoomPage() {
 
           case "mute-participant":
             if (msg.target_user_id === user.id) {
+              const shouldMute = msg.is_muted !== false;
               if (localStreamRef.current) {
-                localStreamRef.current.getAudioTracks().forEach((t) => (t.enabled = false));
-                setIsLocalMuted(true);
+                localStreamRef.current.getAudioTracks().forEach((t) => (t.enabled = !shouldMute));
+                setIsLocalMuted(shouldMute);
                 if (ws.readyState === WebSocket.OPEN) {
-                  ws.send(JSON.stringify({ type: "participant-muted", is_muted: true }));
+                  ws.send(JSON.stringify({ type: "participant-muted", is_muted: shouldMute }));
                 }
               }
             }
             if (msg.target_user_id) {
               const peer = peerConnectionsRef.current.get(msg.target_user_id);
               if (peer) {
-                peer.isMuted = true;
+                peer.isMuted = msg.is_muted !== false;
                 updateRemoteStreamsList();
               }
             }
@@ -475,14 +476,19 @@ export default function MeetingRoomPage() {
     }
   };
 
-  const handleHostMuteSingleParticipant = async (participantId: number, targetUserId: number) => {
+  const handleHostMuteSingleParticipant = async (
+    participantId: number,
+    targetUserId: number,
+    targetMuteState: boolean
+  ) => {
     try {
-      await apiRequest(`/api/meetings/${meetingId}/participants/${participantId}/mute`, {
-        method: "POST",
-      });
+      await apiRequest(
+        `/api/meetings/${meetingId}/participants/${participantId}/mute?is_muted=${targetMuteState}`,
+        { method: "POST" }
+      );
       fetchParticipantsList();
     } catch (e: any) {
-      alert(e.message || "Failed to mute participant.");
+      alert(e.message || "Failed to update participant mute state.");
     }
   };
 

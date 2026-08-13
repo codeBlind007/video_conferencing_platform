@@ -211,13 +211,14 @@ async def websocket_endpoint(websocket: WebSocket, meeting_id: str):
 
             elif msg_type == "mute-participant":
                 target_user_id = data.get("target_user_id")
+                is_muted_val = data.get("is_muted", True)
                 await manager.broadcast_to_meeting(
                     meeting_id,
                     {
                         "type": "mute-participant",
                         "target_user_id": target_user_id,
                         "participant_id": data.get("participant_id"),
-                        "is_muted": True
+                        "is_muted": is_muted_val
                     }
                 )
 
