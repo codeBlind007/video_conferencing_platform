@@ -22,6 +22,7 @@ from app.schemas.participant import (
     ParticipantResponse
 )
 from app.core.security import get_current_user
+from app.core.config import settings
 from app.api.ws import manager
 
 router = APIRouter(
@@ -57,6 +58,11 @@ def ensure_utc(dt: datetime | None) -> datetime | None:
     return dt
 
 
+def get_invite_link(meeting_id: str) -> str:
+    base_url = settings.FRONTEND_URL.rstrip("/")
+    return f"{base_url}/join/{meeting_id}"
+
+
 # -----------------------------------------------------------------------------
 # 1. FIXED PATH ROUTES (Must come before /{meeting_id} dynamic routes)
 # -----------------------------------------------------------------------------
@@ -83,7 +89,7 @@ def create_instant_meeting(
     db.commit()
     db.refresh(new_meeting)
 
-    invite_link = f"http://localhost:3000/join/{new_meeting.meeting_id}"
+    invite_link = get_invite_link(new_meeting.meeting_id)
 
     return InstantMeetingResponse(
         id=new_meeting.id,
@@ -135,7 +141,7 @@ def schedule_meeting(
     db.commit()
     db.refresh(new_meeting)
 
-    invite_link = f"http://localhost:3000/join/{new_meeting.meeting_id}"
+    invite_link = get_invite_link(new_meeting.meeting_id)
 
     return InstantMeetingResponse(
         id=new_meeting.id,
@@ -181,7 +187,7 @@ def get_upcoming_meetings(
                 meeting_id=m.meeting_id,
                 title=m.title,
                 description=m.description,
-                invite_link=f"http://localhost:3000/join/{m.meeting_id}",
+                invite_link=get_invite_link(m.meeting_id),
                 scheduled_at=ensure_utc(m.scheduled_at),
                 duration=m.duration,
                 is_instant=m.is_instant,
@@ -222,7 +228,7 @@ def get_recent_meetings(
                 meeting_id=m.meeting_id,
                 title=m.title,
                 description=m.description,
-                invite_link=f"http://localhost:3000/join/{m.meeting_id}",
+                invite_link=get_invite_link(m.meeting_id),
                 scheduled_at=ensure_utc(m.scheduled_at),
                 duration=m.duration,
                 is_instant=m.is_instant,
@@ -265,7 +271,7 @@ def get_meeting_details(
         meeting_id=meeting.meeting_id,
         title=meeting.title,
         description=meeting.description,
-        invite_link=f"http://localhost:3000/join/{meeting.meeting_id}",
+        invite_link=get_invite_link(meeting.meeting_id),
         scheduled_at=meeting.scheduled_at,
         duration=meeting.duration,
         is_instant=meeting.is_instant,

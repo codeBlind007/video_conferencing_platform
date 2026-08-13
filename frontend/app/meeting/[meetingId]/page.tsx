@@ -156,7 +156,8 @@ export default function MeetingRoomPage() {
   useEffect(() => {
     if (!localStream || !user) return;
 
-    const wsUrl = `${WS_BASE_URL}/api/ws/meetings/${meetingId}`;
+    const token = typeof window !== "undefined" ? localStorage.getItem("zoom_clone_token") : "";
+    const wsUrl = `${WS_BASE_URL}/api/ws/meetings/${meetingId}${token ? `?token=${encodeURIComponent(token)}` : ""}`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 

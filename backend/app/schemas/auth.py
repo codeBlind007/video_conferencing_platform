@@ -23,4 +23,7 @@ class UserResponse(BaseModel):
 class AuthResponse(BaseModel):
     message: str = "Authentication successful"
     user: UserResponse
+    access_token: str | None = None
+    token_type: str = "bearer"
+
 

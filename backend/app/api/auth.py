@@ -13,6 +13,22 @@ router = APIRouter(
 )
 
 
+def set_auth_cookie(response: Response, access_token: str):
+    """Helper to set access_token cookie using configurable environment settings."""
+    cookie_kwargs = {
+        "key": "access_token",
+        "value": access_token,
+        "httponly": True,
+        "max_age": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        "samesite": settings.COOKIE_SAMESITE,
+        "secure": settings.COOKIE_SECURE,
+    }
+    if settings.COOKIE_DOMAIN:
+        cookie_kwargs["domain"] = settings.COOKIE_DOMAIN
+
+    response.set_cookie(**cookie_kwargs)
+
+
 @router.post("/signup", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 def signup(user_data: UserSignup, response: Response, db: Session = Depends(get_db)):
     """Registers a new user, hashes password, saves to DB, sets JWT HTTP-only cookie, and returns token."""
@@ -41,18 +57,12 @@ def signup(user_data: UserSignup, response: Response, db: Session = Depends(get_
     access_token = create_access_token(data={"sub": str(new_user.id)})
 
     # 5. Set HTTP-only Cookie
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax",
-        secure=False  # Set to True in production with HTTPS
-    )
+    set_auth_cookie(response, access_token)
 
     return AuthResponse(
         message="User registered successfully",
-        user=UserResponse.model_validate(new_user)
+        user=UserResponse.model_validate(new_user),
+        access_token=access_token
     )
 
 
@@ -74,21 +84,13 @@ def login(credentials: UserLogin, response: Response, db: Session = Depends(get_
     access_token = create_access_token(data={"sub": str(user.id)})
 
     # 4. Set HTTP-only Cookie
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax",
-        secure=False  # Set to True in production with HTTPS
-    )
+    set_auth_cookie(response, access_token)
 
     return AuthResponse(
         message="Logged in successfully",
-        user=UserResponse.model_validate(user)
+        user=UserResponse.model_validate(user),
+        access_token=access_token
     )
-
-
 
 
 @router.post("/logout")
@@ -96,12 +98,17 @@ def logout(response: Response):
     """
     Clears the HTTP-only JWT access token cookie on logout.
     """
-    response.delete_cookie(
-        key="access_token",
-        httponly=True,
-        samesite="lax",
-        secure=False
-    )
+    cookie_kwargs = {
+        "key": "access_token",
+        "httponly": True,
+        "samesite": settings.COOKIE_SAMESITE,
+        "secure": settings.COOKIE_SECURE,
+    }
+    if settings.COOKIE_DOMAIN:
+        cookie_kwargs["domain"] = settings.COOKIE_DOMAIN
+
+    response.delete_cookie(**cookie_kwargs)
     return {
         "message": "Logged out successfully"
     }
+

@@ -40,6 +40,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     setUser(res.user);
     localStorage.setItem("zoom_clone_user", JSON.stringify(res.user));
+    if (res.access_token) {
+      localStorage.setItem("zoom_clone_token", res.access_token);
+    }
     router.push("/dashboard");
   };
 
@@ -50,6 +53,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     setUser(res.user);
     localStorage.setItem("zoom_clone_user", JSON.stringify(res.user));
+    if (res.access_token) {
+      localStorage.setItem("zoom_clone_token", res.access_token);
+    }
     router.push("/dashboard");
   };
 
@@ -61,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       localStorage.removeItem("zoom_clone_user");
+      localStorage.removeItem("zoom_clone_token");
       router.push("/login");
     }
   };

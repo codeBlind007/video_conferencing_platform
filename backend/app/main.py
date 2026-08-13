@@ -38,17 +38,25 @@ app = FastAPI(
 )
 
 # Configure CORS Middleware for Next.js frontend
+allowed_origins_env = [
+    o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()
+]
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3001",
-    CLIENT_URL
 ]
+if CLIENT_URL:
+    origins.append(CLIENT_URL)
+for o in allowed_origins_env:
+    if o not in origins:
+        origins.append(o)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

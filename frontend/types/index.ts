@@ -7,6 +7,8 @@ export interface User {
 export interface AuthResponse {
   message: string;
   user: User;
+  access_token?: string;
+  token_type?: string;
 }
 
 export interface Participant {

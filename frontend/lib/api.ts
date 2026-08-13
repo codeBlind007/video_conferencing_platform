@@ -7,8 +7,11 @@ interface FetchOptions extends RequestInit {
 export async function apiRequest<T = any>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { data, headers: customHeaders, ...customOptions } = options;
 
+  const token = typeof window !== "undefined" ? localStorage.getItem("zoom_clone_token") : null;
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(customHeaders as Record<string, string>),
   };
 
