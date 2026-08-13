@@ -1,0 +1,16 @@
+node_modules/
+.env.local
+.env
+.venv
+.env.example
+frontend/node_modules
+backend/node_modules
+.gitignore
+.idea
+.DS_Store
+*.pyc
+__pycache__/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal

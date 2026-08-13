@@ -1,8 +1,13 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 from sqlalchemy import String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
+
+if TYPE_CHECKING:
+    from app.models.meeting import Meeting
+    from app.models.participant import Participant
 
 
 class User(Base):
@@ -34,3 +39,18 @@ class User(Base):
         DateTime,
         default=datetime.utcnow
     )
+
+    # Relationships
+    meetings: Mapped[list["Meeting"]] = relationship(
+        "Meeting",
+        back_populates="host",
+        cascade="all, delete-orphan"
+    )
+
+    participants: Mapped[list["Participant"]] = relationship(
+        "Participant",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+

@@ -1,8 +1,13 @@
-from sqlalchemy import String, Text, DateTime, Integer, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
+from typing import TYPE_CHECKING
+from sqlalchemy import String, Text, DateTime, Integer, Boolean, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.database import Base
+
+if TYPE_CHECKING:
+    from app.models.user import User
+    from app.models.participant import Participant
 
 
 class Meeting(Base):
@@ -30,6 +35,12 @@ class Meeting(Base):
         nullable=True
     )
 
+    host_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False
+    )
+
     scheduled_at: Mapped[datetime | None] = mapped_column(
         DateTime,
         nullable=True
@@ -42,7 +53,7 @@ class Meeting(Base):
 
     is_instant: Mapped[bool] = mapped_column(
         Boolean,
-        default=False
+        default=True
     )
 
     is_active: Mapped[bool] = mapped_column(
@@ -54,3 +65,12 @@ class Meeting(Base):
         DateTime,
         default=datetime.utcnow
     )
+
+    # Relationships
+    host: Mapped["User"] = relationship("User", back_populates="meetings")
+    participants: Mapped[list["Participant"]] = relationship(
+        "Participant",
+        back_populates="meeting",
+        cascade="all, delete-orphan"
+    )
+

@@ -51,13 +51,14 @@ def signup(user_data: UserSignup, response: Response, db: Session = Depends(get_
     )
 
     return AuthResponse(
+        message="User registered successfully",
         user=UserResponse.model_validate(new_user)
     )
 
 
 @router.post("/login", response_model=AuthResponse)
 def login(credentials: UserLogin, response: Response, db: Session = Depends(get_db)):
-    """Authenticates user with email and password, sets JWT HTTP-only cookie, and returns token."""
+    """Authenticates user with email and password, sets JWT HTTP-only cookie."""
     # 1. Find user by email
     user = db.query(User).filter(User.email == credentials.email).first()
 
@@ -83,8 +84,11 @@ def login(credentials: UserLogin, response: Response, db: Session = Depends(get_
     )
 
     return AuthResponse(
+        message="Logged in successfully",
         user=UserResponse.model_validate(user)
     )
+
+
 
 
 @router.post("/logout")
