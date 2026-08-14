@@ -88,7 +88,8 @@ export type SignalingMessageType =
   | "mute-participant"
   | "participant-removed"
   | "meeting-ended"
-  | "chat";
+  | "chat"
+  | "screen-share-state";
 
 export interface SignalingMessage {
   type: SignalingMessageType;

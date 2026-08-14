@@ -230,11 +230,14 @@ export default function MeetingRoomPage() {
       // Handle Remote Stream Tracks
       pc.ontrack = (event) => {
         console.log(`Received remote track from user ${targetUserId}:`, event.track.kind);
-        event.streams[0].getTracks().forEach((track) => {
-          if (!remoteStream.getTracks().some((t) => t.id === track.id)) {
-            remoteStream.addTrack(track);
-          }
-        });
+        const activeStream = event.streams && event.streams[0] ? event.streams[0] : remoteStream;
+        if (!activeStream.getTracks().some((t) => t.id === event.track.id)) {
+          activeStream.addTrack(event.track);
+        }
+        const peerState = peerConnectionsRef.current.get(targetUserId);
+        if (peerState) {
+          peerState.stream = activeStream;
+        }
         updateRemoteStreamsList();
       };
 
@@ -348,6 +351,10 @@ export default function MeetingRoomPage() {
               removePeer(msg.user_id);
               fetchParticipantsList();
             }
+            break;
+
+          case "screen-share-state":
+            updateRemoteStreamsList();
             break;
 
           case "participant-muted":
@@ -475,7 +482,7 @@ export default function MeetingRoomPage() {
     }
   };
 
-  const stopScreenShare = useCallback(() => {
+  const stopScreenShare = useCallback(async () => {
     if (screenTrackRef.current) {
       screenTrackRef.current.stop();
       screenTrackRef.current = null;
@@ -483,18 +490,50 @@ export default function MeetingRoomPage() {
     setIsScreenSharing(false);
 
     if (localStreamRef.current) {
-      const cameraTrack = localStreamRef.current.getVideoTracks()[0];
-      setLocalStream(localStreamRef.current);
+      const audioTracks = localStreamRef.current.getAudioTracks();
+      const videoTracks = localStreamRef.current.getVideoTracks().filter((t) => t !== screenTrackRef.current);
+      const cameraTrack = videoTracks[0];
 
-      peerConnectionsRef.current.forEach((peer) => {
+      const cameraStream = new MediaStream(cameraTrack ? [cameraTrack, ...audioTracks] : audioTracks);
+      setLocalStream(cameraStream);
+      localStreamRef.current = cameraStream;
+
+      for (const [targetUserId, peer] of Array.from(peerConnectionsRef.current.entries())) {
         const senders = peer.pc.getSenders();
-        const videoSender = senders.find((s) => s.track?.kind === "video" || s.track === null);
+        const videoSender = senders.find((s) => s.track?.kind === "video");
+
         if (videoSender && cameraTrack) {
-          videoSender.replaceTrack(cameraTrack);
+          await videoSender.replaceTrack(cameraTrack);
         }
-      });
+
+        try {
+          const offer = await peer.pc.createOffer();
+          await peer.pc.setLocalDescription(offer);
+          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(
+              JSON.stringify({
+                type: "offer",
+                target_user_id: targetUserId,
+                data: peer.pc.localDescription,
+              })
+            );
+          }
+        } catch (e) {
+          console.warn("Renegotiation offer error on stopScreenShare:", e);
+        }
+      }
     }
-  }, []);
+
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(
+        JSON.stringify({
+          type: "screen-share-state",
+          is_sharing: false,
+          user_id: user?.id,
+        })
+      );
+    }
+  }, [user]);
 
   const handleToggleScreenShare = async () => {
     if (isScreenSharing) {
@@ -514,15 +553,46 @@ export default function MeetingRoomPage() {
 
         const audioTracks = localStreamRef.current ? localStreamRef.current.getAudioTracks() : [];
         const combinedStream = new MediaStream([screenTrack, ...audioTracks]);
-        setLocalStream(combinedStream);
 
-        peerConnectionsRef.current.forEach((peer) => {
+        setLocalStream(combinedStream);
+        localStreamRef.current = combinedStream;
+
+        for (const [targetUserId, peer] of Array.from(peerConnectionsRef.current.entries())) {
           const senders = peer.pc.getSenders();
-          const videoSender = senders.find((s) => s.track?.kind === "video" || s.track === null);
+          const videoSender = senders.find((s) => s.track?.kind === "video");
+
           if (videoSender) {
-            videoSender.replaceTrack(screenTrack);
+            await videoSender.replaceTrack(screenTrack);
+          } else {
+            peer.pc.addTrack(screenTrack, combinedStream);
           }
-        });
+
+          try {
+            const offer = await peer.pc.createOffer();
+            await peer.pc.setLocalDescription(offer);
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              wsRef.current.send(
+                JSON.stringify({
+                  type: "offer",
+                  target_user_id: targetUserId,
+                  data: peer.pc.localDescription,
+                })
+              );
+            }
+          } catch (e) {
+            console.warn("Renegotiation offer error on handleToggleScreenShare:", e);
+          }
+        }
+
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.send(
+            JSON.stringify({
+              type: "screen-share-state",
+              is_sharing: true,
+              user_id: user?.id,
+            })
+          );
+        }
 
         screenTrack.onended = () => {
           stopScreenShare();

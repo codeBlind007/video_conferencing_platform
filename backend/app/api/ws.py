@@ -199,6 +199,17 @@ async def websocket_endpoint(websocket: WebSocket, meeting_id: str):
                 else:
                     await manager.broadcast_to_meeting(meeting_id, payload, exclude=websocket)
 
+            elif msg_type == "screen-share-state":
+                await manager.broadcast_to_meeting(
+                    meeting_id,
+                    {
+                        "type": "screen-share-state",
+                        "user_id": user_id,
+                        "is_sharing": data.get("is_sharing", False)
+                    },
+                    exclude=websocket
+                )
+
             elif msg_type == "participant-muted":
                 await manager.broadcast_to_meeting(
                     meeting_id,
