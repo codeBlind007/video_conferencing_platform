@@ -727,7 +727,7 @@ export default function MeetingRoomPage() {
         )}
       </main>
 
-      <footer className="h-16 shrink-0 bg-black border-t border-zinc-800 z-20">
+      <footer className="h-16 shrink-0 bg-black border-t border-zinc-800 z-40 relative overflow-visible">
         <ControlBar
           isMuted={isLocalMuted}
           isVideoOff={isLocalVideoOff}

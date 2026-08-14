@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Mic,
   MicOff,
@@ -59,15 +59,52 @@ export function ControlBar({
   const [showMore, setShowMore] = useState(false);
   const [showHostTools, setShowHostTools] = useState(false);
 
-  const handleCopyInvite = () => {
-    navigator.clipboard.writeText(inviteLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    setShowMore(false);
+  const controlBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (controlBarRef.current && !controlBarRef.current.contains(event.target as Node)) {
+        setShowMore(false);
+        setShowReactions(false);
+        setShowHostTools(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleCopyInvite = async () => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(inviteLink);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = inviteLink;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        textArea.remove();
+      }
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+        setShowMore(false);
+      }, 1500);
+    } catch (err) {
+      console.error("Failed to copy invite link:", err);
+      setShowMore(false);
+    }
   };
 
   return (
-    <div className="w-full h-full bg-black border-t border-zinc-800 px-2 sm:px-6 flex items-center justify-between text-white select-none relative z-30 overflow-x-auto no-scrollbar">
+    <div
+      ref={controlBarRef}
+      className="w-full h-full bg-black border-t border-zinc-800 px-2 sm:px-6 flex items-center justify-between text-white select-none relative z-40 overflow-visible"
+    >
       <div className="max-w-7xl w-full mx-auto flex items-center justify-between space-x-1 sm:space-x-4 min-w-0">
         <div className="flex items-center space-x-1 sm:space-x-4 shrink-0">
           <ControlButton
@@ -88,7 +125,7 @@ export function ControlBar({
           />
         </div>
 
-        <div className="flex items-center space-x-0.5 sm:space-x-3 overflow-x-auto no-scrollbar shrink-0">
+        <div className="flex items-center space-x-0.5 sm:space-x-3 shrink-0 overflow-visible">
           <ControlButton
             icon={Users}
             label="Participants"
@@ -152,7 +189,7 @@ export function ControlBar({
                 hasChevron={false}
               />
               {showHostTools && (
-                <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-700 rounded-xl py-2 w-48 shadow-2xl z-50 text-xs">
+                <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-700 rounded-xl py-2 w-48 shadow-2xl z-50 text-xs animate-in fade-in zoom-in-95 duration-150">
                   {onMuteAll && (
                     <button
                       onClick={() => {
@@ -198,13 +235,17 @@ export function ControlBar({
             />
 
             {showMore && (
-              <div className="absolute bottom-16 right-0 bg-zinc-900 border border-zinc-700 rounded-xl py-2 w-48 shadow-2xl z-50 text-xs">
+              <div className="absolute bottom-16 right-0 bg-zinc-900 border border-zinc-700 rounded-xl py-2 w-52 shadow-2xl z-50 text-xs animate-in fade-in zoom-in-95 duration-150">
                 <button
                   onClick={handleCopyInvite}
-                  className="w-full text-left px-4 py-2 hover:bg-zinc-800 text-white font-medium flex items-center space-x-2 transition-colors"
+                  className="w-full text-left px-4 py-2.5 hover:bg-zinc-800 text-white font-medium flex items-center space-x-2.5 transition-colors group cursor-pointer"
                 >
-                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-zinc-400" />}
-                  <span>{copied ? "Copied Link!" : "Copy Invite Link"}</span>
+                  {copied ? (
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  ) : (
+                    <Copy className="w-4 h-4 text-zinc-400 group-hover:text-white shrink-0" />
+                  )}
+                  <span className="truncate">{copied ? "Copied Meeting Link!" : "Copy Meeting Link"}</span>
                 </button>
               </div>
             )}
