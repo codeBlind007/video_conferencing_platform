@@ -32,17 +32,14 @@ export function Modal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
       />
 
-      {/* Dialog Window */}
       <div
         className={`relative w-full ${maxWidth} bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-10 animate-in zoom-in-95 duration-200`}
       >
-        {/* Header */}
         {title && (
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
             <h3 className="text-base font-bold text-slate-900">{title}</h3>
@@ -55,7 +52,6 @@ export function Modal({
           </div>
         )}
 
-        {/* Content */}
         <div className="p-6">{children}</div>
       </div>
     </div>

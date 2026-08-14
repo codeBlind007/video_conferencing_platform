@@ -21,7 +21,6 @@ import { ReactionsOverlay } from "@/components/meeting/ReactionsOverlay";
 function getWebSocketUrl(meetingId: string, token: string): string {
   let baseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
 
-  // Automatically upgrade ws:// to wss:// if page is loaded over HTTPS
   if (typeof window !== "undefined") {
     if (window.location.protocol === "https:") {
       baseUrl = baseUrl.replace(/^ws:\/\//i, "wss://");
@@ -33,7 +32,6 @@ function getWebSocketUrl(meetingId: string, token: string): string {
     }
   }
 
-  // Remove trailing slash
   baseUrl = baseUrl.replace(/\/$/, "");
 
   return `${baseUrl}/api/ws/meetings/${meetingId}${token ? `?token=${encodeURIComponent(token)}` : ""}`;
@@ -54,33 +52,27 @@ export default function MeetingRoomPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  // Meeting State
   const [meeting, setMeeting] = useState<MeetingDetailResponse | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [displayName, setDisplayName] = useState<string>("Guest");
 
-  // Local Media State
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [isLocalMuted, setIsLocalMuted] = useState(false);
   const [isLocalVideoOff, setIsLocalVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
-  // Peer Connections State (userId -> PeerState)
   const peerConnectionsRef = useRef<Map<number, PeerState>>(new Map());
   const [remoteStreams, setRemoteStreams] = useState<RemoteParticipantStream[]>([]);
 
-  // Panels & UI State
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Array<{ id: string; sender: string; text: string; timestamp: string }>>([]);
   const [activeReactions, setActiveReactions] = useState<Array<{ id: string; emoji: string; sender: string }>>([]);
 
-  // Refs for WebSocket, media & screen sharing
   const wsRef = useRef<WebSocket | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const screenTrackRef = useRef<MediaStreamTrack | null>(null);
 
-  // Helper to trigger remote streams re-render
   const updateRemoteStreamsList = useCallback(() => {
     const list: RemoteParticipantStream[] = [];
     peerConnectionsRef.current.forEach((peer) => {
@@ -95,7 +87,6 @@ export default function MeetingRoomPage() {
     setRemoteStreams(list);
   }, []);
 
-  // Fetch Participants List from Backend
   const fetchParticipantsList = useCallback(async () => {
     try {
       const list = await apiRequest<Participant[]>(`/api/meetings/${meetingId}/participants`);
@@ -105,13 +96,11 @@ export default function MeetingRoomPage() {
     }
   }, [meetingId]);
 
-  // 1. Initial Setup: Validate Meeting, Join Backend, & Media Stream
   useEffect(() => {
     let mounted = true;
 
     async function initRoom() {
       try {
-        // Fetch meeting details
         const detail = await apiRequest<MeetingDetailResponse>(`/api/meetings/${meetingId}`);
         if (!mounted) return;
         if (!detail.is_active) {
@@ -121,18 +110,15 @@ export default function MeetingRoomPage() {
         }
         setMeeting(detail);
 
-        // Get saved display name or current user name
         const savedName = sessionStorage.getItem(`display_name_${meetingId}`);
         const finalName = savedName || user?.name || "Participant";
         setDisplayName(finalName);
 
-        // Call Join API endpoint
         await apiRequest(`/api/meetings/${meetingId}/join`, {
           method: "POST",
           data: { display_name: finalName },
         });
 
-        // Initialize Local Media Stream
         const initialMicPref = sessionStorage.getItem(`initial_mic_${meetingId}`) !== "off";
         const initialCamPref = sessionStorage.getItem(`initial_cam_${meetingId}`) !== "off";
 
@@ -146,7 +132,6 @@ export default function MeetingRoomPage() {
           return;
         }
 
-        // Apply initial media preferences
         stream.getAudioTracks().forEach((t) => (t.enabled = initialMicPref));
         stream.getVideoTracks().forEach((t) => (t.enabled = initialCamPref));
 
@@ -156,7 +141,6 @@ export default function MeetingRoomPage() {
         setLocalStream(stream);
         localStreamRef.current = stream;
 
-        // Fetch initial participants
         fetchParticipantsList();
       } catch (err: any) {
         console.error("Room initialization error", err);
@@ -169,14 +153,12 @@ export default function MeetingRoomPage() {
 
     return () => {
       mounted = false;
-      // Stop local media tracks on unmount
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
   }, [meetingId, user, router, fetchParticipantsList]);
 
-  // 2. WebSocket Signaling & WebRTC Peer Connections Management
   useEffect(() => {
     if (!localStream || !user) return;
 
@@ -199,7 +181,6 @@ export default function MeetingRoomPage() {
       return;
     }
 
-    // Create RTCPeerConnection for a remote peer
     const createPeer = (targetUserId: number, peerDisplayName: string, isInitiator: boolean) => {
       if (peerConnectionsRef.current.has(targetUserId)) {
         return peerConnectionsRef.current.get(targetUserId)!;
@@ -209,14 +190,12 @@ export default function MeetingRoomPage() {
       const pc = new RTCPeerConnection(rtcConfiguration);
       const remoteStream = new MediaStream();
 
-      // Add local stream tracks to PeerConnection
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => {
           pc.addTrack(track, localStreamRef.current!);
         });
       }
 
-      // Handle ICE Candidate generation
       pc.onicecandidate = (event) => {
         if (event.candidate && ws.readyState === WebSocket.OPEN) {
           ws.send(
@@ -229,7 +208,6 @@ export default function MeetingRoomPage() {
         }
       };
 
-      // Handle Remote Stream Tracks
       pc.ontrack = (event) => {
         console.log(`Received remote track from user ${targetUserId}:`, event.track.kind);
         const activeStream = event.streams && event.streams[0] ? event.streams[0] : remoteStream;
@@ -255,7 +233,6 @@ export default function MeetingRoomPage() {
       peerConnectionsRef.current.set(targetUserId, peerState);
       updateRemoteStreamsList();
 
-      // If initiator, generate SDP Offer
       if (isInitiator) {
         pc.createOffer()
           .then((offer) => pc.setLocalDescription(offer))
@@ -276,7 +253,6 @@ export default function MeetingRoomPage() {
       return peerState;
     };
 
-    // Close PeerConnection helper
     const removePeer = (targetUserId: number) => {
       const peer = peerConnectionsRef.current.get(targetUserId);
       if (peer) {
@@ -286,7 +262,6 @@ export default function MeetingRoomPage() {
       }
     };
 
-    // Process Received WebSocket Signaling Messages
     ws.onmessage = async (event) => {
       try {
         const msg: SignalingMessage = JSON.parse(event.data);
@@ -294,7 +269,6 @@ export default function MeetingRoomPage() {
 
         switch (msg.type) {
           case "room-state":
-            // Received active room participants on join
             if (msg.active_participants) {
               msg.active_participants.forEach((p: RoomParticipantInfo) => {
                 if (p.user_id !== user.id) {
@@ -371,7 +345,6 @@ export default function MeetingRoomPage() {
             break;
 
           case "mute-all":
-            // Host muted everyone: mute local audio track
             if (localStreamRef.current) {
               localStreamRef.current.getAudioTracks().forEach((t) => (t.enabled = false));
               setIsLocalMuted(true);
@@ -443,7 +416,6 @@ export default function MeetingRoomPage() {
     };
 
     return () => {
-      // Clean up all peer connections & websocket on unmount
       peerConnectionsRef.current.forEach((peer) => peer.pc.close());
       peerConnectionsRef.current.clear();
       if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
@@ -452,7 +424,6 @@ export default function MeetingRoomPage() {
     };
   }, [localStream, user, meetingId, router, fetchParticipantsList, updateRemoteStreamsList]);
 
-  // 3. User Controls (Mute Mic / Toggle Camera / Leave / Host Actions)
   const handleToggleMic = () => {
     if (localStreamRef.current) {
       const audioTrack = localStreamRef.current.getAudioTracks()[0];
@@ -461,7 +432,6 @@ export default function MeetingRoomPage() {
         const newMutedState = !audioTrack.enabled;
         setIsLocalMuted(newMutedState);
 
-        // Notify WebSocket server
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
           wsRef.current.send(
             JSON.stringify({
@@ -641,7 +611,6 @@ export default function MeetingRoomPage() {
     }
   };
 
-  // 4. Host Actions
   const isHost = meeting ? user?.id === meeting.host_id : false;
 
   const handleHostEndMeeting = async () => {
@@ -723,16 +692,13 @@ export default function MeetingRoomPage() {
 
   return (
     <div className="h-screen h-[100dvh] w-screen bg-[#0F172A] text-white flex flex-col overflow-hidden select-none">
-      {/* Top Header */}
       <MeetingHeader
         title={meeting.title}
         meetingId={meetingId}
         participantsCount={1 + remoteStreams.length}
       />
 
-      {/* Main Content Area (Video Area + Side Panels) */}
       <main className="flex-1 min-h-0 min-w-0 flex flex-row overflow-hidden relative">
-        {/* Video Grid Area */}
         <div className="flex-1 min-h-0 min-w-0 bg-[#0B0F17] flex items-center justify-center overflow-hidden relative">
           <VideoGrid
             localStream={localStream}
@@ -745,11 +711,9 @@ export default function MeetingRoomPage() {
             currentUserId={user?.id}
           />
 
-          {/* Animated Floating Reactions Overlay */}
           <ReactionsOverlay reactions={activeReactions} />
         </div>
 
-        {/* Side Panel: Chat or Participants */}
         {(isParticipantsOpen || isChatOpen) && (
           <div className="w-full sm:w-80 md:w-96 shrink-0 h-full min-h-0 border-l border-slate-700 bg-white text-slate-900 flex flex-col overflow-hidden z-30 absolute sm:relative inset-y-0 right-0 shadow-2xl">
             {isParticipantsOpen && (
@@ -777,7 +741,6 @@ export default function MeetingRoomPage() {
         )}
       </main>
 
-      {/* Bottom Control Bar */}
       <footer className="h-16 shrink-0 bg-black border-t border-zinc-800 z-20">
         <ControlBar
           isMuted={isLocalMuted}
@@ -806,4 +769,3 @@ export default function MeetingRoomPage() {
     </div>
   );
 }
-

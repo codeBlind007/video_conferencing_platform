@@ -1,1 +1,1 @@
-{"/_not-found/page":"/_not-found","/meeting/[meetingId]/page":"/meeting/[meetingId]","/dashboard/page":"/dashboard","/login/page":"/login","/page":"/","/join/[meetingId]/page":"/join/[meetingId]","/signup/page":"/signup"}
+{"/_not-found/page":"/_not-found","/join/[meetingId]/page":"/join/[meetingId]","/page":"/","/dashboard/page":"/dashboard","/login/page":"/login","/meeting/[meetingId]/page":"/meeting/[meetingId]","/signup/page":"/signup"}

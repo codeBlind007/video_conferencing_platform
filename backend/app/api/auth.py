@@ -14,7 +14,6 @@ router = APIRouter(
 
 
 def set_auth_cookie(response: Response, access_token: str):
-    """Helper to set access_token cookie using configurable environment settings."""
     cookie_kwargs = {
         "key": "access_token",
         "value": access_token,
@@ -31,8 +30,6 @@ def set_auth_cookie(response: Response, access_token: str):
 
 @router.post("/signup", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 def signup(user_data: UserSignup, response: Response, db: Session = Depends(get_db)):
-    """Registers a new user, hashes password, saves to DB, sets JWT HTTP-only cookie, and returns token."""
-    # 1. Check if user with given email already exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         raise HTTPException(
@@ -40,10 +37,8 @@ def signup(user_data: UserSignup, response: Response, db: Session = Depends(get_
             detail="Email is already registered"
         )
 
-    # 2. Hash the user's password securely
     hashed_pwd = hash_password(user_data.password)
 
-    # 3. Create and save new User record
     new_user = User(
         name=user_data.name,
         email=user_data.email,
@@ -53,10 +48,7 @@ def signup(user_data: UserSignup, response: Response, db: Session = Depends(get_
     db.commit()
     db.refresh(new_user)
 
-    # 4. Generate JWT access token with user ID in 'sub' claim
     access_token = create_access_token(data={"sub": str(new_user.id)})
-
-    # 5. Set HTTP-only Cookie
     set_auth_cookie(response, access_token)
 
     return AuthResponse(
@@ -68,11 +60,8 @@ def signup(user_data: UserSignup, response: Response, db: Session = Depends(get_
 
 @router.post("/login", response_model=AuthResponse)
 def login(credentials: UserLogin, response: Response, db: Session = Depends(get_db)):
-    """Authenticates user with email and password, sets JWT HTTP-only cookie."""
-    # 1. Find user by email
     user = db.query(User).filter(User.email == credentials.email).first()
 
-    # 2. Verify user existence and password hash
     if not user or not verify_password(credentials.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -80,10 +69,7 @@ def login(credentials: UserLogin, response: Response, db: Session = Depends(get_
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    # 3. Generate JWT access token with user ID in 'sub' claim
     access_token = create_access_token(data={"sub": str(user.id)})
-
-    # 4. Set HTTP-only Cookie
     set_auth_cookie(response, access_token)
 
     return AuthResponse(
@@ -95,9 +81,6 @@ def login(credentials: UserLogin, response: Response, db: Session = Depends(get_
 
 @router.post("/logout")
 def logout(response: Response):
-    """
-    Clears the HTTP-only JWT access token cookie on logout.
-    """
     cookie_kwargs = {
         "key": "access_token",
         "httponly": True,
@@ -111,4 +94,3 @@ def logout(response: Response):
     return {
         "message": "Logged out successfully"
     }
-

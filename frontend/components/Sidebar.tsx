@@ -35,7 +35,6 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile Backdrop Overlay */}
       {mobileOpen && (
         <div
           onClick={onMobileClose}
@@ -50,9 +49,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             : "hidden md:flex md:w-60 md:h-screen md:sticky md:top-0"
         }`}
       >
-        {/* Top Logo & Main Nav */}
         <div>
-          {/* Brand Logo Header */}
           <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100">
             <Link
               href="/dashboard"
@@ -70,7 +67,6 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
               </span>
             </Link>
 
-            {/* Mobile Close Button */}
             {onMobileClose && (
               <button
                 onClick={onMobileClose}
@@ -82,12 +78,10 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             )}
           </div>
 
-          {/* Section Header */}
           <div className="px-6 pt-6 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
             My Products
           </div>
 
-          {/* Nav Links */}
           <nav className="px-3 space-y-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href && item.name === "Home";
@@ -116,7 +110,6 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
           </nav>
         </div>
 
-        {/* Bottom Profile / Quick Settings */}
         <div className="p-4 border-t border-slate-100 space-y-2 bg-slate-50/50">
           <button
             onClick={() => alert("Zoom Workplace Settings")}

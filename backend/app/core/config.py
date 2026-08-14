@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Path to the .env file in the backend directory
 env_path = Path(__file__).resolve().parent.parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
@@ -22,4 +21,3 @@ class Settings:
 
 
 settings = Settings()
-

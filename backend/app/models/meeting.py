@@ -66,11 +66,9 @@ class Meeting(Base):
         default=datetime.utcnow
     )
 
-    # Relationships
     host: Mapped["User"] = relationship("User", back_populates="meetings")
     participants: Mapped[list["Participant"]] = relationship(
         "Participant",
         back_populates="meeting",
         cascade="all, delete-orphan"
     )
-

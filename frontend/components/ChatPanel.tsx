@@ -31,7 +31,6 @@ export function ChatPanel({ isOpen, onClose, messages, onSendMessage }: ChatPane
 
   return (
     <div className="w-full h-full min-h-0 flex flex-col bg-white text-slate-900">
-      {/* Header */}
       <div className="p-4 border-b border-slate-200 flex items-center justify-between shrink-0">
         <h3 className="text-base font-bold text-slate-900">In-Meeting Chat</h3>
         <button
@@ -42,7 +41,6 @@ export function ChatPanel({ isOpen, onClose, messages, onSendMessage }: ChatPane
         </button>
       </div>
 
-      {/* Messages List */}
       <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 ? (
           <p className="text-xs text-slate-400 text-center py-8">
@@ -61,7 +59,6 @@ export function ChatPanel({ isOpen, onClose, messages, onSendMessage }: ChatPane
         )}
       </div>
 
-      {/* Message Input */}
       <form onSubmit={handleSend} className="p-3 border-t border-slate-200 flex items-center space-x-2 bg-slate-50 shrink-0">
         <input
           type="text"

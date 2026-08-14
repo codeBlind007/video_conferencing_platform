@@ -1,9 +1,3 @@
-"""
-Database Seed Script for Zoom Clone Backend
-Populates SQLite database with initial sample users, instant/scheduled meetings, and participant records.
-Idempotent execution: safe to run multiple times without creating duplicate data.
-"""
-
 from datetime import datetime, timedelta
 from app.database.database import SessionLocal, Base, engine
 from app.models.user import User
@@ -13,16 +7,13 @@ from app.core.security import hash_password
 
 
 def seed_data():
-    # Ensure clean database tables exist with updated schema
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
-
     try:
         print("🌱 Seeding database...")
 
-        # 1. Create Default Users if they don't exist
         default_users_data = [
             {"name": "Alice Host", "email": "host@example.com", "password": "password123"},
             {"name": "Bob Peer", "email": "user1@example.com", "password": "password123"},
@@ -50,7 +41,6 @@ def seed_data():
         bob = users_dict["user1@example.com"]
         charlie = users_dict["user2@example.com"]
 
-        # 2. Seed Sample Meetings
         meetings_data = [
             {
                 "meeting_id": "demo-instant-1",
@@ -122,7 +112,6 @@ def seed_data():
                 print(f"  . Meeting already exists: {meeting.title} [{meeting.meeting_id}]")
             meetings_dict[mdata["meeting_id"]] = meeting
 
-        # 3. Seed Participant Records for Recent & Past Meetings
         recent_m = meetings_dict["demo-recent-1"]
         participants_data = [
             {"meeting_id": recent_m.id, "user_id": alice.id, "display_name": "Alice Host", "is_active": True, "is_muted": False},

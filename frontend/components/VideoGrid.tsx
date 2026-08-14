@@ -34,7 +34,6 @@ export function VideoGrid({
 }: VideoGridProps) {
   const totalCount = 1 + remoteStreams.length;
 
-  // Compute CSS grid columns based on number of participants & responsive breakpoints
   let gridCols = "grid-cols-1";
   if (totalCount === 2) {
     gridCols = "grid-cols-1 sm:grid-cols-2";
@@ -48,7 +47,6 @@ export function VideoGrid({
 
   return (
     <div className={`grid ${gridCols} gap-2 sm:gap-3 w-full h-full p-2 sm:p-4 max-w-7xl mx-auto min-h-0 min-w-0 items-center justify-center overflow-hidden`}>
-      {/* Local Video Tile */}
       <div className="w-full h-full min-h-0 min-w-0 flex items-center justify-center overflow-hidden">
         <ParticipantVideo
           stream={localStream}
@@ -61,7 +59,6 @@ export function VideoGrid({
         />
       </div>
 
-      {/* Remote Video Tiles */}
       {remoteStreams.map((remote) => (
         <div key={remote.userId} className="w-full h-full min-h-0 min-w-0 flex items-center justify-center overflow-hidden">
           <ParticipantVideo

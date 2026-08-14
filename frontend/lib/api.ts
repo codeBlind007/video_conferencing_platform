@@ -41,7 +41,6 @@ export async function apiRequest<T = any>(endpoint: string, options: FetchOption
     throw new Error(errorMessage);
   }
 
-  // Handle 204 No Content
   if (response.status === 204) {
     return {} as T;
   }

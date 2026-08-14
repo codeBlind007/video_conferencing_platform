@@ -16,7 +16,6 @@ from sqlalchemy import inspect
 CLIENT_URL = os.getenv("FRONTEND_URL")
 
 def ensure_database_schema():
-    """Ensures existing database tables contain required columns (e.g. host_id in meetings)."""
     try:
         inspector = inspect(engine)
         if "meetings" in inspector.get_table_names():
@@ -37,7 +36,6 @@ app = FastAPI(
     description="Backend API for Zoom Clone featuring JWT Authentication, Meeting Management & WebRTC Signaling"
 )
 
-# Configure CORS Middleware for Next.js frontend
 allowed_origins_env = [
     o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()
 ]
@@ -62,13 +60,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register routes
 app.include_router(auth_router)
 app.include_router(meetings_router)
 app.include_router(ws_router)
-
-
-
 
 
 @app.get("/")

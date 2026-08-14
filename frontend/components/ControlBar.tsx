@@ -69,7 +69,6 @@ export function ControlBar({
   return (
     <div className="w-full h-full bg-black border-t border-zinc-800 px-3 sm:px-6 flex items-center justify-between text-white select-none relative z-30">
       <div className="max-w-7xl w-full mx-auto flex items-center justify-between">
-        {/* Left: Audio & Video */}
         <div className="flex items-center space-x-2 sm:space-x-4">
           <ControlButton
             icon={isMuted ? MicOff : Mic}
@@ -89,7 +88,6 @@ export function ControlBar({
           />
         </div>
 
-        {/* Center: Controls */}
         <div className="flex items-center space-x-1 sm:space-x-3">
           <ControlButton
             icon={Users}
@@ -103,7 +101,6 @@ export function ControlBar({
             onClick={onToggleChat}
           />
 
-          {/* React */}
           <div className="relative">
             <ControlButton
               icon={Heart}
@@ -123,7 +120,6 @@ export function ControlBar({
             />
           </div>
 
-          {/* Share Screen */}
           {onToggleScreenShare && (
             <ControlButton
               icon={Upload}
@@ -143,7 +139,6 @@ export function ControlBar({
             />
           )}
 
-          {/* Host Tools */}
           {isHost && (
             <div className="relative">
               <ControlButton
@@ -185,7 +180,6 @@ export function ControlBar({
             </div>
           )}
 
-          {/* More (...) */}
           <div className="relative">
             <ControlButton
               icon={MoreHorizontal}
@@ -217,7 +211,6 @@ export function ControlBar({
           </div>
         </div>
 
-        {/* Right: End / Leave Button */}
         <div>
           <button
             onClick={isHost && onEndMeeting ? onEndMeeting : onLeaveMeeting}

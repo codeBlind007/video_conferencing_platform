@@ -62,6 +62,5 @@ class Participant(Base):
         nullable=True
     )
 
-    # Relationships
     meeting: Mapped["Meeting"] = relationship("Meeting", back_populates="participants")
     user: Mapped["User"] = relationship("User", back_populates="participants")

@@ -28,7 +28,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-3 sm:p-6">
       <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-xl">
-        {/* Brand Header */}
         <div className="text-center mb-8">
           <div className="bg-[#0E71EB] w-14 h-14 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg shadow-[#0E71EB]/20">
             <Video className="w-8 h-8" />

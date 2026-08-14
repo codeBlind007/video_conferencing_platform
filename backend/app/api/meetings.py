@@ -32,7 +32,6 @@ router = APIRouter(
 
 
 def generate_meeting_id() -> str:
-    """Generates a URL-safe meeting ID in format 'abc-def-ghi'."""
     chars = string.ascii_lowercase + string.digits
     part1 = ''.join(secrets.choice(chars) for _ in range(3))
     part2 = ''.join(secrets.choice(chars) for _ in range(3))
@@ -41,7 +40,6 @@ def generate_meeting_id() -> str:
 
 
 def create_unique_meeting_id(db: Session) -> str:
-    """Ensures generated meeting ID is unique in the database before returning."""
     while True:
         meeting_id = generate_meeting_id()
         existing = db.query(Meeting).filter(Meeting.meeting_id == meeting_id).first()
@@ -50,7 +48,6 @@ def create_unique_meeting_id(db: Session) -> str:
 
 
 def ensure_utc(dt: datetime | None) -> datetime | None:
-    """Ensures naive UTC datetimes carry timezone.utc info for proper ISO serialization."""
     if dt is None:
         return None
     if dt.tzinfo is None:
@@ -63,17 +60,12 @@ def get_invite_link(meeting_id: str) -> str:
     return f"{base_url}/join/{meeting_id}"
 
 
-# -----------------------------------------------------------------------------
-# 1. FIXED PATH ROUTES (Must come before /{meeting_id} dynamic routes)
-# -----------------------------------------------------------------------------
-
 @router.post("/instant", response_model=InstantMeetingResponse, status_code=status.HTTP_201_CREATED)
 def create_instant_meeting(
     meeting_in: InstantMeetingCreate = InstantMeetingCreate(),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Creates an instant meeting for the authenticated user."""
     meeting_id = create_unique_meeting_id(db)
 
     new_meeting = Meeting(
@@ -110,7 +102,6 @@ def schedule_meeting(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Schedules a future meeting for the authenticated user."""
     scheduled_at = meeting_in.scheduled_at
     now = datetime.now(timezone.utc) if scheduled_at.tzinfo is not None else datetime.utcnow()
 
@@ -120,7 +111,6 @@ def schedule_meeting(
             detail="Scheduled time must be in the future"
         )
 
-    # Convert to naive UTC for consistent SQLite storage
     if scheduled_at.tzinfo is not None:
         scheduled_at = scheduled_at.astimezone(timezone.utc).replace(tzinfo=None)
 
@@ -161,7 +151,6 @@ def get_upcoming_meetings(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Returns future scheduled meetings hosted or joined by the current user."""
     now = datetime.utcnow()
     meetings = (
         db.query(Meeting)
@@ -206,7 +195,6 @@ def get_recent_meetings(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Returns meetings hosted or joined by the current user, ordered by latest activity."""
     meetings = (
         db.query(Meeting)
         .filter(
@@ -242,17 +230,12 @@ def get_recent_meetings(
     return results
 
 
-# -----------------------------------------------------------------------------
-# 2. DYNAMIC PATH ROUTES ({meeting_id})
-# -----------------------------------------------------------------------------
-
 @router.get("/{meeting_id}", response_model=MeetingDetailResponse)
 def get_meeting_details(
     meeting_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Fetches details for a given meeting along with host and active participants."""
     meeting = db.query(Meeting).filter(Meeting.meeting_id == meeting_id).first()
     if not meeting:
         raise HTTPException(
@@ -291,7 +274,6 @@ def join_meeting(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Joins a meeting using meeting ID. Validates active status and records participant."""
     meeting = db.query(Meeting).filter(Meeting.meeting_id == meeting_id).first()
     if not meeting:
         raise HTTPException(
@@ -307,7 +289,6 @@ def join_meeting(
 
     display_name = join_in.display_name.strip() if join_in.display_name else current_user.name
 
-    # Check for existing participant record
     existing_participant = (
         db.query(Participant)
         .filter(Participant.meeting_id == meeting.id, Participant.user_id == current_user.id)
@@ -342,7 +323,6 @@ def leave_meeting(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Leaves an active meeting and records exit timestamp."""
     meeting = db.query(Meeting).filter(Meeting.meeting_id == meeting_id).first()
     if not meeting:
         raise HTTPException(
@@ -364,17 +344,12 @@ def leave_meeting(
     return {"message": "Left meeting successfully"}
 
 
-# -----------------------------------------------------------------------------
-# 3. HOST CONTROLS & MANAGEMENT
-# -----------------------------------------------------------------------------
-
 @router.get("/{meeting_id}/participants", response_model=list[ParticipantResponse])
 def get_meeting_participants(
     meeting_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Lists all active participants for a meeting."""
     meeting = db.query(Meeting).filter(Meeting.meeting_id == meeting_id).first()
     if not meeting:
         raise HTTPException(
@@ -397,7 +372,6 @@ async def end_meeting(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Host control: Ends meeting, marks all participants inactive, and notifies WebSocket clients."""
     meeting = db.query(Meeting).filter(Meeting.meeting_id == meeting_id).first()
     if not meeting:
         raise HTTPException(
@@ -414,7 +388,6 @@ async def end_meeting(
     meeting.is_active = False
     now = datetime.utcnow()
 
-    # Mark all active participants as left
     active_participants = (
         db.query(Participant)
         .filter(Participant.meeting_id == meeting.id, Participant.is_active == True)
@@ -426,7 +399,6 @@ async def end_meeting(
 
     db.commit()
 
-    # Notify WebSocket clients in real-time
     await manager.broadcast_to_meeting(meeting_id, {"type": "meeting-ended", "message": "Host ended the meeting"})
 
     return {"message": "Meeting ended successfully"}
@@ -438,7 +410,6 @@ async def mute_all_participants(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Host control: Mutes all active participants in a meeting."""
     meeting = db.query(Meeting).filter(Meeting.meeting_id == meeting_id).first()
     if not meeting:
         raise HTTPException(
@@ -459,7 +430,6 @@ async def mute_all_participants(
 
     db.commit()
 
-    # Notify WebSocket clients in real-time
     await manager.broadcast_to_meeting(meeting_id, {"type": "mute-all", "muted_by_host": True})
 
     return {"message": "All participants muted"}
@@ -473,7 +443,6 @@ async def mute_single_participant(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Host control: Mutes or unmutes a specific participant in a meeting."""
     meeting = db.query(Meeting).filter(Meeting.meeting_id == meeting_id).first()
     if not meeting:
         raise HTTPException(
@@ -499,12 +468,10 @@ async def mute_single_participant(
             detail="Participant not found or inactive"
         )
 
-    # Toggle or set explicit mute state
     new_mute_state = is_muted if is_muted is not None else not participant.is_muted
     participant.is_muted = new_mute_state
     db.commit()
 
-    # Notify WebSocket clients in real-time
     await manager.broadcast_to_meeting(
         meeting_id,
         {
@@ -528,7 +495,6 @@ async def remove_participant(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Host control: Removes/kicks a participant from the meeting."""
     meeting = db.query(Meeting).filter(Meeting.meeting_id == meeting_id).first()
     if not meeting:
         raise HTTPException(
@@ -558,7 +524,6 @@ async def remove_participant(
     participant.left_at = datetime.utcnow()
     db.commit()
 
-    # Notify WebSocket clients in real-time
     await manager.broadcast_to_meeting(
         meeting_id,
         {

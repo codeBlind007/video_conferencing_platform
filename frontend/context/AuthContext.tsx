@@ -21,7 +21,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Restore cached user profile if present and token exists
     const cachedUser = localStorage.getItem("zoom_clone_user");
     const cachedToken = localStorage.getItem("zoom_clone_token");
     if (cachedUser && cachedToken) {

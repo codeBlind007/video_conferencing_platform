@@ -31,7 +31,6 @@ export function ParticipantsPanel({
 
   return (
     <div className="w-full h-full min-h-0 flex flex-col bg-white text-slate-900">
-      {/* Panel Header */}
       <div className="p-4 border-b border-slate-200 flex items-center justify-between shrink-0">
         <h3 className="text-base font-bold text-slate-900 flex items-center space-x-2">
           <span>Participants</span>
@@ -47,7 +46,6 @@ export function ParticipantsPanel({
         </button>
       </div>
 
-      {/* Participant List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {participants.map((p) => {
           const isParticipantHost = p.user_id === hostUserId;
@@ -76,7 +74,6 @@ export function ParticipantsPanel({
                 </div>
               </div>
 
-              {/* Status Icon & Host Controls */}
               <div className="flex items-center space-x-2 shrink-0">
                 {isHost && !isParticipantHost && !isSelf && onMuteParticipant ? (
                   <button
@@ -102,7 +99,6 @@ export function ParticipantsPanel({
                   </div>
                 )}
 
-                {/* Remove Participant Button */}
                 {isHost && !isParticipantHost && !isSelf && onRemoveParticipant && (
                   <button
                     onClick={() => onRemoveParticipant(p.id)}
@@ -118,7 +114,6 @@ export function ParticipantsPanel({
         })}
       </div>
 
-      {/* Host Controls Bottom Bar */}
       {isHost && onMuteAll && (
         <div className="p-4 border-t border-slate-200 bg-slate-50 shrink-0">
           <button

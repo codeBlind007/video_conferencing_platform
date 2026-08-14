@@ -25,7 +25,6 @@ export default function PreJoinPage() {
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  // 1. Fetch & Validate Meeting Details
   useEffect(() => {
     async function loadMeeting() {
       try {
@@ -46,7 +45,6 @@ export default function PreJoinPage() {
     }
   }, [meetingId]);
 
-  // Set default display name from session storage or authenticated user
   useEffect(() => {
     const savedName = sessionStorage.getItem(`display_name_${meetingId}`);
     if (savedName) {
@@ -56,7 +54,6 @@ export default function PreJoinPage() {
     }
   }, [user, meetingId]);
 
-  // 2. Setup Local Camera/Microphone Preview Stream
   useEffect(() => {
     let stream: MediaStream | null = null;
 
@@ -89,7 +86,6 @@ export default function PreJoinPage() {
     };
   }, []);
 
-  // Handle Video Element attachment when isCameraOn state changes
   useEffect(() => {
     if (videoRef.current && mediaStream) {
       videoRef.current.srcObject = mediaStream;
@@ -157,7 +153,6 @@ export default function PreJoinPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between p-3 sm:p-6">
-      {/* Top Header */}
       <header className="max-w-5xl mx-auto w-full flex items-center justify-between py-2">
         <button
           onClick={() => router.push("/dashboard")}
@@ -172,9 +167,7 @@ export default function PreJoinPage() {
         </span>
       </header>
 
-      {/* Center Preview Content */}
       <main className="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-center my-auto py-4 sm:py-6">
-        {/* Left: Camera Preview Tile (7 Cols) */}
         <div className="md:col-span-7 space-y-4">
           <div className="relative aspect-video bg-slate-900 border border-slate-200 rounded-3xl overflow-hidden shadow-xl flex items-center justify-center">
             {isCameraOn && mediaStream ? (
@@ -194,7 +187,6 @@ export default function PreJoinPage() {
               </div>
             )}
 
-            {/* Media Toggles Overlay */}
             <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center space-x-2 sm:space-x-3 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl border border-white/10 shadow-xl">
               <button
                 onClick={toggleMic}
@@ -224,7 +216,6 @@ export default function PreJoinPage() {
           )}
         </div>
 
-        {/* Right: Join Info & Display Name Form (5 Cols) */}
         <div className="md:col-span-5 bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 space-y-5 sm:space-y-6 shadow-xl">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{meeting.title}</h1>

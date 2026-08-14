@@ -17,15 +17,7 @@ router = APIRouter(
 
 
 class ConnectionManager:
-    """
-    In-memory WebSocket Connection Manager grouped by meeting_id.
-    Relays WebRTC P2P signaling messages (offer, answer, ICE candidates)
-    and broadcasts meeting state updates (join, leave, mute, end).
-    """
-
     def __init__(self):
-        # meeting_id -> list of connection dicts
-        # Dict structure: {"websocket": WebSocket, "user_id": int, "participant_id": int, "display_name": str}
         self.active_connections: Dict[str, List[Dict[str, Any]]] = {}
 
     async def connect(self, meeting_id: str, websocket: WebSocket, user_id: int, participant_id: int, display_name: str):
@@ -33,7 +25,6 @@ class ConnectionManager:
         if meeting_id not in self.active_connections:
             self.active_connections[meeting_id] = []
         
-        # Remove any existing connection for this user in the same meeting to prevent duplicate sockets
         self.active_connections[meeting_id] = [
             conn for conn in self.active_connections[meeting_id]
             if conn["user_id"] != user_id
@@ -103,10 +94,6 @@ manager = ConnectionManager()
 
 
 def authenticate_websocket(websocket: WebSocket) -> int | None:
-    """
-    Authenticates WebSocket connection via 'token' query parameter or 'access_token' cookie.
-    Returns user_id if valid, None otherwise.
-    """
     token = websocket.query_params.get("token")
     if not token and websocket.cookies:
         token = websocket.cookies.get("access_token")
@@ -131,7 +118,6 @@ async def websocket_endpoint(websocket: WebSocket, meeting_id: str):
 
     db: Session = SessionLocal()
     try:
-        # Validate meeting existence and active status
         meeting = db.query(Meeting).filter(Meeting.meeting_id == meeting_id, Meeting.is_active == True).first()
         if not meeting:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Meeting not found or inactive")
@@ -142,7 +128,6 @@ async def websocket_endpoint(websocket: WebSocket, meeting_id: str):
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="User not found")
             return
 
-        # Find or create active participant record
         participant = db.query(Participant).filter(
             Participant.meeting_id == meeting.id,
             Participant.user_id == user.id,
@@ -152,10 +137,8 @@ async def websocket_endpoint(websocket: WebSocket, meeting_id: str):
         display_name = participant.display_name if participant else user.name
         participant_id = participant.id if participant else 0
 
-        # Connect WebSocket
         await manager.connect(meeting_id, websocket, user_id, participant_id, display_name)
 
-        # Notify others in the meeting about participant join
         await manager.broadcast_to_meeting(
             meeting_id,
             {
@@ -168,7 +151,6 @@ async def websocket_endpoint(websocket: WebSocket, meeting_id: str):
             exclude=websocket
         )
 
-        # Send existing participant list to the joined user
         await manager.send_personal_message(
             {
                 "type": "room-state",
@@ -180,13 +162,11 @@ async def websocket_endpoint(websocket: WebSocket, meeting_id: str):
             websocket
         )
 
-        # Message Listening Loop
         while True:
             data = await websocket.receive_json()
             msg_type = data.get("type")
 
             if msg_type in ["offer", "answer", "ice-candidate"]:
-                # Relay P2P WebRTC signaling message to target participant or broadcast
                 target_id = data.get("target_user_id")
                 payload = {
                     "type": msg_type,

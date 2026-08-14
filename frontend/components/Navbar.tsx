@@ -41,9 +41,7 @@ export function Navbar({
     <>
       <header className="bg-white border-b border-slate-200 text-slate-800 sticky top-0 z-30 shadow-xs">
         <div className="h-16 px-3 sm:px-6 flex items-center justify-between gap-2">
-          {/* Left: Mobile Menu Toggle & Brand Logo + Search */}
           <div className="flex items-center space-x-2 flex-1 max-w-md min-w-0">
-            {/* Mobile Hamburger Menu Button */}
             {onToggleMobileSidebar && (
               <button
                 onClick={onToggleMobileSidebar}
@@ -54,7 +52,6 @@ export function Navbar({
               </button>
             )}
 
-            {/* Mobile Brand Icon */}
             <Link
               href="/dashboard"
               className="md:hidden flex items-center space-x-1.5 shrink-0"
@@ -64,7 +61,6 @@ export function Navbar({
               </div>
             </Link>
 
-            {/* Search Input Bar */}
             <div className="relative w-full min-w-0">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               <input
@@ -75,9 +71,7 @@ export function Navbar({
             </div>
           </div>
 
-          {/* Right: Quick Action Buttons & Profile */}
           <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
-            {/* Schedule Quick Action */}
             <button
               onClick={() => setIsScheduleOpen(true)}
               className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 sm:px-3.5 py-2 rounded-xl flex items-center space-x-1.5 transition-colors border border-slate-200"
@@ -87,7 +81,6 @@ export function Navbar({
               <span className="hidden sm:inline">Schedule</span>
             </button>
 
-            {/* Join Quick Action */}
             <button
               onClick={() => setIsJoinOpen(true)}
               className="bg-[#0E71EB] hover:bg-[#005CE6] text-white text-xs font-semibold px-2.5 sm:px-3.5 py-2 rounded-xl flex items-center space-x-1.5 transition-colors shadow-md shadow-[#0E71EB]/20"
@@ -97,7 +90,6 @@ export function Navbar({
               <span className="hidden sm:inline">Join</span>
             </button>
 
-            {/* Host Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setShowHostDropdown(!showHostDropdown)}
@@ -135,7 +127,6 @@ export function Navbar({
 
             <div className="h-5 w-px bg-slate-200 mx-0.5 sm:mx-1"></div>
 
-            {/* Notifications & Help */}
             <button className="p-1.5 sm:p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors">
               <Bell className="w-4 h-4" />
             </button>
@@ -143,7 +134,6 @@ export function Navbar({
               <HelpCircle className="w-4 h-4" />
             </button>
 
-            {/* User Profile Avatar */}
             {user && (
               <div className="relative">
                 <button
@@ -195,7 +185,6 @@ export function Navbar({
         </div>
       </header>
 
-      {/* Modals */}
       <JoinModal isOpen={isJoinOpen} onClose={() => setIsJoinOpen(false)} />
       <ScheduleModal
         isOpen={isScheduleOpen}

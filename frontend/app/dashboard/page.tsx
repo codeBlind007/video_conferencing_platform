@@ -50,7 +50,6 @@ export default function DashboardPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // Personal Meeting ID (PMI) derived consistently from user ID
   const personalMeetingId = user ? `pmi-${1000 + user.id}` : "pmi-1001";
   const pmiInviteLink = `http://localhost:3000/join/${personalMeetingId}`;
 
@@ -118,13 +117,11 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex">
-      {/* Left Sidebar */}
       <Sidebar
         mobileOpen={isMobileSidebarOpen}
         onMobileClose={() => setIsMobileSidebarOpen(false)}
       />
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar
           onNewMeeting={handleNewMeeting}
@@ -133,10 +130,8 @@ export default function DashboardPage() {
         />
 
         <main className="flex-1 p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 overflow-y-auto max-w-7xl w-full mx-auto">
-          {/* Welcome Banner */}
           <WelcomeBanner userName={user.name} />
 
-          {/* Hero Action Cards Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <QuickActionCard
               title={creatingInstant ? "Starting..." : "New Meeting"}
@@ -184,14 +179,12 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* Personal Meeting ID Banner */}
           <PersonalMeetingCard
             personalMeetingId={personalMeetingId}
             pmiInviteLink={pmiInviteLink}
             onStartPmiMeeting={() => router.push(`/join/${personalMeetingId}`)}
           />
 
-          {/* Meetings Navigation Tabs & List */}
           <div className="space-y-4">
             <div className="border-b border-slate-200 overflow-x-auto scrollbar-none flex items-center justify-between">
               <div className="flex space-x-4 sm:space-x-6 min-w-max">
@@ -221,7 +214,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Tab Content */}
             {activeTab === "upcoming" ? (
               loadingData ? (
                 <div className="py-12 text-center text-xs text-slate-400">Loading upcoming meetings...</div>
@@ -326,7 +318,6 @@ export default function DashboardPage() {
         </main>
       </div>
 
-      {/* Modals */}
       <JoinModal isOpen={isJoinOpen} onClose={() => setIsJoinOpen(false)} />
       <ScheduleModal
         isOpen={isScheduleOpen}
