@@ -15,6 +15,8 @@ import { VideoGrid, RemoteParticipantStream } from "@/components/VideoGrid";
 import { ControlBar } from "@/components/ControlBar";
 import { ParticipantsPanel } from "@/components/ParticipantsPanel";
 import { ChatPanel } from "@/components/ChatPanel";
+import { MeetingHeader } from "@/components/meeting/MeetingHeader";
+import { ReactionsOverlay } from "@/components/meeting/ReactionsOverlay";
 
 function getWebSocketUrl(meetingId: string, token: string): string {
   let baseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
@@ -722,17 +724,11 @@ export default function MeetingRoomPage() {
   return (
     <div className="h-screen h-[100dvh] w-screen bg-[#0F172A] text-white flex flex-col overflow-hidden select-none">
       {/* Top Header */}
-      <header className="h-12 shrink-0 bg-[#1E293B] px-3 sm:px-4 border-b border-slate-700/60 flex items-center justify-between z-20">
-        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-          <span className="text-xs sm:text-sm font-bold text-white tracking-tight truncate max-w-[140px] sm:max-w-xs md:max-w-md">{meeting.title}</span>
-          <span className="bg-slate-800 text-[10px] sm:text-xs font-mono px-2 py-0.5 sm:px-2.5 rounded-full text-slate-300 border border-slate-700 shrink-0">
-            <span className="hidden sm:inline">ID: </span>{meetingId}
-          </span>
-        </div>
-        <div className="text-[11px] sm:text-xs text-slate-300 shrink-0">
-          Participants: <strong className="text-white">{1 + remoteStreams.length}</strong>
-        </div>
-      </header>
+      <MeetingHeader
+        title={meeting.title}
+        meetingId={meetingId}
+        participantsCount={1 + remoteStreams.length}
+      />
 
       {/* Main Content Area (Video Area + Side Panels) */}
       <main className="flex-1 min-h-0 min-w-0 flex flex-row overflow-hidden relative">
@@ -750,16 +746,7 @@ export default function MeetingRoomPage() {
           />
 
           {/* Animated Floating Reactions Overlay */}
-          {activeReactions.length > 0 && (
-            <div className="absolute bottom-6 left-6 flex flex-col space-y-2 z-40 pointer-events-none">
-              {activeReactions.map((r) => (
-                <div key={r.id} className="animate-bounce bg-zinc-900/90 backdrop-blur-md px-3.5 py-2 rounded-full text-lg border border-zinc-700 text-white flex items-center space-x-2 shadow-2xl">
-                  <span>{r.emoji}</span>
-                  <span className="text-xs font-semibold text-zinc-200">{r.sender}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          <ReactionsOverlay reactions={activeReactions} />
         </div>
 
         {/* Side Panel: Chat or Participants */}
