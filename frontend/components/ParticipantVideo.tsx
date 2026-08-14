@@ -10,6 +10,7 @@ interface ParticipantVideoProps {
   isMuted?: boolean;
   isVideoOff?: boolean;
   isHost?: boolean;
+  isScreenSharing?: boolean;
 }
 
 export function ParticipantVideo({
@@ -19,6 +20,7 @@ export function ParticipantVideo({
   isMuted = false,
   isVideoOff = false,
   isHost = false,
+  isScreenSharing = false,
 }: ParticipantVideoProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -45,7 +47,7 @@ export function ParticipantVideo({
         playsInline
         muted={isLocal} // Always mute local video element to prevent echo feedback
         className={`w-full h-full max-h-full max-w-full object-contain ${
-          isLocal ? "scale-x-[-1]" : ""
+          isLocal && !isScreenSharing ? "scale-x-[-1]" : ""
         } ${hasVideoTrack ? "block" : "hidden"}`}
       />
 

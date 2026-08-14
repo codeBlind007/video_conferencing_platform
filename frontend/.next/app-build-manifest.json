@@ -12,7 +12,7 @@
       "static/chunks/fd9d1056-13f2035e4b026c54.js",
       "static/chunks/117-32ad9b3b895fa1f4.js",
       "static/chunks/main-app-43742c5ea4f607e2.js",
-      "static/css/c5657c2f51484d25.css",
+      "static/css/a8106d1c858c704d.css",
       "static/chunks/app/layout-085e2c949bf08b32.js"
     ],
     "/dashboard/page": [
@@ -22,13 +22,6 @@
       "static/chunks/main-app-43742c5ea4f607e2.js",
       "static/chunks/160-40aa47a4d9e769c3.js",
       "static/chunks/app/dashboard/page-29618d8866522de0.js"
-    ],
-    "/join/[meetingId]/page": [
-      "static/chunks/webpack-c81f7fd28659d64f.js",
-      "static/chunks/fd9d1056-13f2035e4b026c54.js",
-      "static/chunks/117-32ad9b3b895fa1f4.js",
-      "static/chunks/main-app-43742c5ea4f607e2.js",
-      "static/chunks/app/join/[meetingId]/page-0e6c6dbdb7005028.js"
     ],
     "/login/page": [
       "static/chunks/webpack-c81f7fd28659d64f.js",
@@ -45,6 +38,13 @@
       "static/chunks/main-app-43742c5ea4f607e2.js",
       "static/chunks/app/page-76a6bf1f501fa758.js"
     ],
+    "/meeting/[meetingId]/page": [
+      "static/chunks/webpack-c81f7fd28659d64f.js",
+      "static/chunks/fd9d1056-13f2035e4b026c54.js",
+      "static/chunks/117-32ad9b3b895fa1f4.js",
+      "static/chunks/main-app-43742c5ea4f607e2.js",
+      "static/chunks/app/meeting/[meetingId]/page-960f6a34cce2586d.js"
+    ],
     "/signup/page": [
       "static/chunks/webpack-c81f7fd28659d64f.js",
       "static/chunks/fd9d1056-13f2035e4b026c54.js",
@@ -53,12 +53,12 @@
       "static/chunks/160-40aa47a4d9e769c3.js",
       "static/chunks/app/signup/page-f98f9e8ba85048cb.js"
     ],
-    "/meeting/[meetingId]/page": [
+    "/join/[meetingId]/page": [
       "static/chunks/webpack-c81f7fd28659d64f.js",
       "static/chunks/fd9d1056-13f2035e4b026c54.js",
       "static/chunks/117-32ad9b3b895fa1f4.js",
       "static/chunks/main-app-43742c5ea4f607e2.js",
-      "static/chunks/app/meeting/[meetingId]/page-88531156f309fb94.js"
+      "static/chunks/app/join/[meetingId]/page-0e6c6dbdb7005028.js"
     ]
   }
 }

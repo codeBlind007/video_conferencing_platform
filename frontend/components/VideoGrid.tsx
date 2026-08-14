@@ -16,6 +16,7 @@ interface VideoGridProps {
   localDisplayName: string;
   isLocalMuted: boolean;
   isLocalVideoOff: boolean;
+  isLocalScreenSharing?: boolean;
   remoteStreams: RemoteParticipantStream[];
   hostUserId?: number;
   currentUserId?: number;
@@ -26,6 +27,7 @@ export function VideoGrid({
   localDisplayName,
   isLocalMuted,
   isLocalVideoOff,
+  isLocalScreenSharing = false,
   remoteStreams,
   hostUserId,
   currentUserId,
@@ -55,6 +57,7 @@ export function VideoGrid({
           isMuted={isLocalMuted}
           isVideoOff={isLocalVideoOff}
           isHost={currentUserId === hostUserId}
+          isScreenSharing={isLocalScreenSharing}
         />
       </div>
 

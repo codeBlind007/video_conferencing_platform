@@ -8,17 +8,23 @@ import {
   VideoOff,
   Users,
   MessageSquare,
+  Heart,
+  Upload,
+  ShieldCheck,
+  MoreHorizontal,
+  ChevronUp,
   Copy,
   Check,
-  PhoneOff,
-  ShieldAlert,
+  X,
 } from "lucide-react";
 
 interface ControlBarProps {
   isMuted: boolean;
   isVideoOff: boolean;
+  isScreenSharing?: boolean;
   onToggleMic: () => void;
   onToggleCamera: () => void;
+  onToggleScreenShare?: () => void;
   onToggleParticipants: () => void;
   onToggleChat: () => void;
   participantsCount: number;
@@ -26,13 +32,17 @@ interface ControlBarProps {
   onLeaveMeeting: () => void;
   isHost: boolean;
   onEndMeeting?: () => void;
+  onMuteAll?: () => void;
+  onSendReaction?: (emoji: string) => void;
 }
 
 export function ControlBar({
   isMuted,
   isVideoOff,
+  isScreenSharing = false,
   onToggleMic,
   onToggleCamera,
+  onToggleScreenShare,
   onToggleParticipants,
   onToggleChat,
   participantsCount,
@@ -40,104 +50,286 @@ export function ControlBar({
   onLeaveMeeting,
   isHost,
   onEndMeeting,
+  onMuteAll,
+  onSendReaction,
 }: ControlBarProps) {
   const [copied, setCopied] = useState(false);
+  const [showReactions, setShowReactions] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const [showHostTools, setShowHostTools] = useState(false);
 
   const handleCopyInvite = () => {
     navigator.clipboard.writeText(inviteLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    setShowMore(false);
   };
 
+  const reactionsList = ["👍", "❤️", "👏", "😂", "🎉", "🔥"];
+
   return (
-    <div className="w-full h-full bg-[#1E293B] border-t border-slate-700/60 px-2 sm:px-4 flex items-center justify-between text-white shadow-2xl">
-      <div className="max-w-7xl w-full mx-auto flex items-center justify-between gap-1 sm:gap-2">
-        {/* Left: Audio & Video Toggles */}
-        <div className="flex items-center space-x-1 sm:space-x-3">
-          <button
-            onClick={onToggleMic}
-            className={`flex flex-col items-center p-2 sm:px-4 sm:py-2 rounded-xl transition-all ${
-              isMuted
-                ? "bg-red-600 text-white hover:bg-red-700 shadow-md"
-                : "bg-slate-800/80 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-700"
-            }`}
-            title={isMuted ? "Unmute" : "Mute"}
-          >
-            {isMuted ? <MicOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Mic className="w-4 h-4 sm:w-5 sm:h-5" />}
-            <span className="text-[10px] mt-1 hidden sm:block font-medium">{isMuted ? "Unmute" : "Mute"}</span>
-          </button>
+    <div className="w-full h-full bg-black border-t border-zinc-800 px-3 sm:px-6 flex items-center justify-between text-white select-none relative z-30">
+      <div className="max-w-7xl w-full mx-auto flex items-center justify-between">
+        
+        {/* Left Section: Audio & Video */}
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          {/* Audio Button */}
+          <div className="flex items-center space-x-0.5 group">
+            <button
+              onClick={onToggleMic}
+              className={`flex flex-col items-center p-1.5 sm:px-3 sm:py-1.5 rounded-lg hover:bg-zinc-800 transition-colors ${
+                isMuted ? "text-red-500" : "text-white"
+              }`}
+              title={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              <span className="text-[11px] font-medium mt-0.5">{isMuted ? "Unmute" : "Audio"}</span>
+            </button>
+            <button
+              onClick={onToggleMic}
+              className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors hidden sm:block"
+            >
+              <ChevronUp className="w-3 h-3" />
+            </button>
+          </div>
 
-          <button
-            onClick={onToggleCamera}
-            className={`flex flex-col items-center p-2 sm:px-4 sm:py-2 rounded-xl transition-all ${
-              isVideoOff
-                ? "bg-red-600 text-white hover:bg-red-700 shadow-md"
-                : "bg-slate-800/80 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-700"
-            }`}
-            title={isVideoOff ? "Start Video" : "Stop Video"}
-          >
-            {isVideoOff ? <VideoOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <VideoIcon className="w-4 h-4 sm:w-5 sm:h-5" />}
-            <span className="text-[10px] mt-1 hidden sm:block font-medium">{isVideoOff ? "Start Video" : "Stop Video"}</span>
-          </button>
+          {/* Video Button */}
+          <div className="flex items-center space-x-0.5 group">
+            <button
+              onClick={onToggleCamera}
+              className={`flex flex-col items-center p-1.5 sm:px-3 sm:py-1.5 rounded-lg hover:bg-zinc-800 transition-colors ${
+                isVideoOff ? "text-red-500" : "text-white"
+              }`}
+              title={isVideoOff ? "Start Video" : "Stop Video"}
+            >
+              {isVideoOff ? <VideoOff className="w-5 h-5" /> : <VideoIcon className="w-5 h-5" />}
+              <span className="text-[11px] font-medium mt-0.5">{isVideoOff ? "Start Video" : "Video"}</span>
+            </button>
+            <button
+              onClick={onToggleCamera}
+              className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors hidden sm:block"
+            >
+              <ChevronUp className="w-3 h-3" />
+            </button>
+          </div>
         </div>
 
-        {/* Center: Meeting Controls (Participants, Chat, Share Link) */}
+        {/* Center Section: Participants, Chat, React, Share, Host Tools, More */}
         <div className="flex items-center space-x-1 sm:space-x-3">
-          <button
-            onClick={onToggleParticipants}
-            className="relative flex flex-col items-center p-2 sm:px-4 sm:py-2 rounded-xl bg-slate-800/80 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-700 transition-all"
-            title="Participants"
-          >
-            <Users className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-[10px] mt-1 hidden sm:block font-medium">Participants</span>
-            {participantsCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-[#0E71EB] text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                {participantsCount}
-              </span>
+          {/* Participants */}
+          <div className="flex items-center space-x-0.5">
+            <button
+              onClick={onToggleParticipants}
+              className="relative flex flex-col items-center p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-white hover:bg-zinc-800 transition-colors"
+              title="Participants"
+            >
+              <div className="relative">
+                <Users className="w-5 h-5" />
+                {participantsCount > 0 && (
+                  <span className="absolute -top-1 -right-2 bg-zinc-700 text-white text-[9px] font-bold px-1 rounded-full border border-black">
+                    {participantsCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] font-medium mt-0.5">Participants</span>
+            </button>
+            <button
+              onClick={onToggleParticipants}
+              className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors hidden sm:block"
+            >
+              <ChevronUp className="w-3 h-3" />
+            </button>
+          </div>
+
+          {/* Chat */}
+          <div className="flex items-center space-x-0.5">
+            <button
+              onClick={onToggleChat}
+              className="flex flex-col items-center p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-white hover:bg-zinc-800 transition-colors"
+              title="Chat"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span className="text-[11px] font-medium mt-0.5">Chat</span>
+            </button>
+            <button
+              onClick={onToggleChat}
+              className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors hidden sm:block"
+            >
+              <ChevronUp className="w-3 h-3" />
+            </button>
+          </div>
+
+          {/* React */}
+          <div className="relative flex items-center space-x-0.5">
+            <button
+              onClick={() => {
+                setShowReactions(!showReactions);
+                setShowMore(false);
+                setShowHostTools(false);
+              }}
+              className="flex flex-col items-center p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-white hover:bg-zinc-800 transition-colors"
+              title="React"
+            >
+              <Heart className="w-5 h-5" />
+              <span className="text-[11px] font-medium mt-0.5">React</span>
+            </button>
+            <button
+              onClick={() => setShowReactions(!showReactions)}
+              className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors hidden sm:block"
+            >
+              <ChevronUp className="w-3 h-3" />
+            </button>
+
+            {/* Reactions Floating Popup */}
+            {showReactions && (
+              <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-700 rounded-full px-3 py-2 flex items-center space-x-2 shadow-2xl z-50">
+                {reactionsList.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => {
+                      if (onSendReaction) onSendReaction(emoji);
+                      setShowReactions(false);
+                    }}
+                    className="text-xl hover:scale-125 transition-transform p-1"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
             )}
-          </button>
+          </div>
 
-          <button
-            onClick={onToggleChat}
-            className="flex flex-col items-center p-2 sm:px-4 sm:py-2 rounded-xl bg-slate-800/80 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-700 transition-all"
-            title="Chat"
-          >
-            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-[10px] mt-1 hidden sm:block font-medium">Chat</span>
-          </button>
+          {/* Share */}
+          {onToggleScreenShare && (
+            <div className="flex items-center space-x-0.5">
+              <button
+                onClick={onToggleScreenShare}
+                className={`flex flex-col items-center p-1.5 sm:px-3 sm:py-1.5 rounded-lg transition-colors ${
+                  isScreenSharing
+                    ? "text-amber-400 hover:bg-zinc-800"
+                    : "text-emerald-400 hover:bg-zinc-800"
+                }`}
+                title={isScreenSharing ? "Stop Share" : "Share"}
+              >
+                <div className="w-5 h-5 rounded border-2 border-current flex items-center justify-center">
+                  <Upload className="w-3 h-3 stroke-[2.5]" />
+                </div>
+                <span className="text-[11px] font-medium mt-0.5 text-white">
+                  {isScreenSharing ? "Stop Share" : "Share"}
+                </span>
+              </button>
+              <button
+                onClick={onToggleScreenShare}
+                className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors hidden sm:block"
+              >
+                <ChevronUp className="w-3 h-3" />
+              </button>
+            </div>
+          )}
 
-          <button
-            onClick={handleCopyInvite}
-            className="flex flex-col items-center p-2 sm:px-4 sm:py-2 rounded-xl bg-slate-800/80 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-700 transition-all"
-            title="Copy Invite Link"
-          >
-            {copied ? <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" /> : <Copy className="w-4 h-4 sm:w-5 sm:h-5" />}
-            <span className="text-[10px] mt-1 hidden sm:block font-medium">{copied ? "Copied!" : "Copy Link"}</span>
-          </button>
+          {/* Host tools (visible to host) */}
+          {isHost && (
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowHostTools(!showHostTools);
+                  setShowReactions(false);
+                  setShowMore(false);
+                }}
+                className="flex flex-col items-center p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-white hover:bg-zinc-800 transition-colors"
+                title="Host tools"
+              >
+                <ShieldCheck className="w-5 h-5" />
+                <span className="text-[11px] font-medium mt-0.5">Host tools</span>
+              </button>
+
+              {showHostTools && (
+                <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-700 rounded-xl py-2 w-48 shadow-2xl z-50 text-xs">
+                  {onMuteAll && (
+                    <button
+                      onClick={() => {
+                        onMuteAll();
+                        setShowHostTools(false);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-zinc-800 text-white font-medium transition-colors"
+                    >
+                      Mute All Participants
+                    </button>
+                  )}
+                  {onEndMeeting && (
+                    <button
+                      onClick={() => {
+                        onEndMeeting();
+                        setShowHostTools(false);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-red-950/60 text-red-400 font-semibold transition-colors border-t border-zinc-800"
+                    >
+                      End Meeting for All
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* More (...) */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setShowMore(!showMore);
+                setShowReactions(false);
+                setShowHostTools(false);
+              }}
+              className="flex flex-col items-center p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-white hover:bg-zinc-800 transition-colors"
+              title="More"
+            >
+              <div className="w-5 h-5 rounded-full border border-white/60 flex items-center justify-center">
+                <MoreHorizontal className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-[11px] font-medium mt-0.5">More</span>
+            </button>
+
+            {showMore && (
+              <div className="absolute bottom-16 right-0 bg-zinc-900 border border-zinc-700 rounded-xl py-2 w-48 shadow-2xl z-50 text-xs">
+                <button
+                  onClick={handleCopyInvite}
+                  className="w-full text-left px-4 py-2 hover:bg-zinc-800 text-white font-medium flex items-center space-x-2 transition-colors"
+                >
+                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-zinc-400" />}
+                  <span>{copied ? "Copied Link!" : "Copy Invite Link"}</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right: Leave / Host End Meeting */}
-        <div className="flex items-center space-x-1.5 sm:space-x-3">
+        {/* Right Section: End / Leave Button */}
+        <div>
           {isHost && onEndMeeting ? (
             <button
               onClick={onEndMeeting}
-              className="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm flex items-center space-x-1 sm:space-x-1.5 transition-colors shadow-md shrink-0"
-              title="End Meeting for All"
+              className="flex flex-col items-center group transition-transform hover:scale-105"
+              title="End Meeting"
             >
-              <ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>End</span>
+              <div className="w-8 h-8 rounded-xl bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-lg shadow-red-600/30">
+                <X className="w-5 h-5 stroke-[2.5]" />
+              </div>
+              <span className="text-[11px] font-semibold text-red-500 mt-0.5">End</span>
             </button>
           ) : (
             <button
               onClick={onLeaveMeeting}
-              className="bg-red-500/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-1 sm:space-x-1.5 transition-colors shrink-0"
+              className="flex flex-col items-center group transition-transform hover:scale-105"
               title="Leave Meeting"
             >
-              <PhoneOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>Leave</span>
+              <div className="w-8 h-8 rounded-xl bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-lg shadow-red-600/30">
+                <X className="w-5 h-5 stroke-[2.5]" />
+              </div>
+              <span className="text-[11px] font-semibold text-red-500 mt-0.5">Leave</span>
             </button>
           )}
         </div>
+
       </div>
     </div>
   );

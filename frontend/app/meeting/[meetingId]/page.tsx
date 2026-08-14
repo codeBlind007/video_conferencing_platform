@@ -61,6 +61,7 @@ export default function MeetingRoomPage() {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [isLocalMuted, setIsLocalMuted] = useState(false);
   const [isLocalVideoOff, setIsLocalVideoOff] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
 
   // Peer Connections State (userId -> PeerState)
   const peerConnectionsRef = useRef<Map<number, PeerState>>(new Map());
@@ -70,10 +71,12 @@ export default function MeetingRoomPage() {
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<Array<{ id: string; sender: string; text: string; timestamp: string }>>([]);
+  const [activeReactions, setActiveReactions] = useState<Array<{ id: string; emoji: string; sender: string }>>([]);
 
-  // Refs for WebSocket & cleanup
+  // Refs for WebSocket, media & screen sharing
   const wsRef = useRef<WebSocket | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const screenTrackRef = useRef<MediaStreamTrack | null>(null);
 
   // Helper to trigger remote streams re-render
   const updateRemoteStreamsList = useCallback(() => {
@@ -472,6 +475,87 @@ export default function MeetingRoomPage() {
     }
   };
 
+  const stopScreenShare = useCallback(() => {
+    if (screenTrackRef.current) {
+      screenTrackRef.current.stop();
+      screenTrackRef.current = null;
+    }
+    setIsScreenSharing(false);
+
+    if (localStreamRef.current) {
+      const cameraTrack = localStreamRef.current.getVideoTracks()[0];
+      setLocalStream(localStreamRef.current);
+
+      peerConnectionsRef.current.forEach((peer) => {
+        const senders = peer.pc.getSenders();
+        const videoSender = senders.find((s) => s.track?.kind === "video" || s.track === null);
+        if (videoSender && cameraTrack) {
+          videoSender.replaceTrack(cameraTrack);
+        }
+      });
+    }
+  }, []);
+
+  const handleToggleScreenShare = async () => {
+    if (isScreenSharing) {
+      stopScreenShare();
+    } else {
+      try {
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true,
+        });
+
+        const screenTrack = displayStream.getVideoTracks()[0];
+        if (!screenTrack) return;
+
+        screenTrackRef.current = screenTrack;
+        setIsScreenSharing(true);
+
+        const audioTracks = localStreamRef.current ? localStreamRef.current.getAudioTracks() : [];
+        const combinedStream = new MediaStream([screenTrack, ...audioTracks]);
+        setLocalStream(combinedStream);
+
+        peerConnectionsRef.current.forEach((peer) => {
+          const senders = peer.pc.getSenders();
+          const videoSender = senders.find((s) => s.track?.kind === "video" || s.track === null);
+          if (videoSender) {
+            videoSender.replaceTrack(screenTrack);
+          }
+        });
+
+        screenTrack.onended = () => {
+          stopScreenShare();
+        };
+      } catch (err) {
+        console.warn("Screen share cancelled or error:", err);
+      }
+    }
+  };
+
+  const handleSendReaction = (emoji: string) => {
+    const reactionObj = {
+      id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
+      emoji,
+      sender: displayName,
+    };
+    setActiveReactions((prev) => [...prev, reactionObj]);
+    setTimeout(() => {
+      setActiveReactions((prev) => prev.filter((r) => r.id !== reactionObj.id));
+    }, 3000);
+
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(
+        JSON.stringify({
+          type: "chat",
+          text: `reacted ${emoji}`,
+          sender: displayName,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        })
+      );
+    }
+  };
+
   const handleLeaveMeeting = async () => {
     try {
       await apiRequest(`/api/meetings/${meetingId}/leave`, { method: "POST" });
@@ -589,10 +673,23 @@ export default function MeetingRoomPage() {
             localDisplayName={displayName}
             isLocalMuted={isLocalMuted}
             isLocalVideoOff={isLocalVideoOff}
+            isLocalScreenSharing={isScreenSharing}
             remoteStreams={remoteStreams}
             hostUserId={meeting.host_id}
             currentUserId={user?.id}
           />
+
+          {/* Animated Floating Reactions Overlay */}
+          {activeReactions.length > 0 && (
+            <div className="absolute bottom-6 left-6 flex flex-col space-y-2 z-40 pointer-events-none">
+              {activeReactions.map((r) => (
+                <div key={r.id} className="animate-bounce bg-zinc-900/90 backdrop-blur-md px-3.5 py-2 rounded-full text-lg border border-zinc-700 text-white flex items-center space-x-2 shadow-2xl">
+                  <span>{r.emoji}</span>
+                  <span className="text-xs font-semibold text-zinc-200">{r.sender}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Side Panel: Chat or Participants */}
@@ -624,12 +721,14 @@ export default function MeetingRoomPage() {
       </main>
 
       {/* Bottom Control Bar */}
-      <footer className="h-16 shrink-0 bg-[#1E293B] border-t border-slate-700/60 z-20">
+      <footer className="h-16 shrink-0 bg-black border-t border-zinc-800 z-20">
         <ControlBar
           isMuted={isLocalMuted}
           isVideoOff={isLocalVideoOff}
+          isScreenSharing={isScreenSharing}
           onToggleMic={handleToggleMic}
           onToggleCamera={handleToggleCamera}
+          onToggleScreenShare={handleToggleScreenShare}
           onToggleParticipants={() => {
             setIsParticipantsOpen(!isParticipantsOpen);
             setIsChatOpen(false);
@@ -643,6 +742,8 @@ export default function MeetingRoomPage() {
           onLeaveMeeting={handleLeaveMeeting}
           isHost={isHost}
           onEndMeeting={handleHostEndMeeting}
+          onMuteAll={handleHostMuteAll}
+          onSendReaction={handleSendReaction}
         />
       </footer>
     </div>
