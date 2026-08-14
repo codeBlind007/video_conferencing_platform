@@ -102,6 +102,7 @@ export interface SignalingMessage {
   text?: string;
   timestamp?: string;
   is_muted?: boolean;
+  is_sharing?: boolean;
   message?: string;
   active_participants?: RoomParticipantInfo[];
   data?: any;

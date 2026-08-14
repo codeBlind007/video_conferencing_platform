@@ -44,6 +44,7 @@ interface PeerState {
   stream: MediaStream;
   isMuted?: boolean;
   isVideoOff?: boolean;
+  isScreenSharing?: boolean;
 }
 
 export default function MeetingRoomPage() {
@@ -71,6 +72,7 @@ export default function MeetingRoomPage() {
 
   const wsRef = useRef<WebSocket | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const cameraTrackRef = useRef<MediaStreamTrack | null>(null);
   const screenTrackRef = useRef<MediaStreamTrack | null>(null);
 
   const updateRemoteStreamsList = useCallback(() => {
@@ -82,6 +84,7 @@ export default function MeetingRoomPage() {
         stream: peer.stream,
         isMuted: peer.isMuted,
         isVideoOff: peer.isVideoOff,
+        isScreenSharing: peer.isScreenSharing,
       });
     });
     setRemoteStreams(list);
@@ -134,6 +137,11 @@ export default function MeetingRoomPage() {
 
         stream.getAudioTracks().forEach((t) => (t.enabled = initialMicPref));
         stream.getVideoTracks().forEach((t) => (t.enabled = initialCamPref));
+
+        const camTrack = stream.getVideoTracks()[0];
+        if (camTrack) {
+          cameraTrackRef.current = camTrack;
+        }
 
         setIsLocalMuted(!initialMicPref);
         setIsLocalVideoOff(!initialCamPref);
@@ -330,6 +338,12 @@ export default function MeetingRoomPage() {
             break;
 
           case "screen-share-state":
+            if (msg.user_id) {
+              const peer = peerConnectionsRef.current.get(msg.user_id);
+              if (peer) {
+                peer.isScreenSharing = msg.is_sharing;
+              }
+            }
             updateRemoteStreamsList();
             break;
 
@@ -445,7 +459,11 @@ export default function MeetingRoomPage() {
   };
 
   const handleToggleCamera = () => {
-    if (localStreamRef.current) {
+    if (cameraTrackRef.current) {
+      cameraTrackRef.current.enabled = !cameraTrackRef.current.enabled;
+      const isOff = !cameraTrackRef.current.enabled;
+      setIsLocalVideoOff(isOff);
+    } else if (localStreamRef.current) {
       const videoTrack = localStreamRef.current.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
@@ -461,38 +479,22 @@ export default function MeetingRoomPage() {
     }
     setIsScreenSharing(false);
 
-    if (localStreamRef.current) {
-      const audioTracks = localStreamRef.current.getAudioTracks();
-      const videoTracks = localStreamRef.current.getVideoTracks().filter((t) => t !== screenTrackRef.current);
-      const cameraTrack = videoTracks[0];
+    const cameraTrack = cameraTrackRef.current;
+    const audioTracks = localStreamRef.current ? localStreamRef.current.getAudioTracks() : [];
+    const videoTracks = cameraTrack && cameraTrack.readyState === "live" ? [cameraTrack] : [];
+    const cameraStream = new MediaStream([...videoTracks, ...audioTracks]);
 
-      const cameraStream = new MediaStream(cameraTrack ? [cameraTrack, ...audioTracks] : audioTracks);
-      setLocalStream(cameraStream);
-      localStreamRef.current = cameraStream;
+    setLocalStream(cameraStream);
+    localStreamRef.current = cameraStream;
 
-      for (const [targetUserId, peer] of Array.from(peerConnectionsRef.current.entries())) {
-        const senders = peer.pc.getSenders();
-        const videoSender = senders.find((s) => s.track?.kind === "video");
+    for (const [_, peer] of Array.from(peerConnectionsRef.current.entries())) {
+      const senders = peer.pc.getSenders();
+      const videoSender = senders.find((s) => s.track?.kind === "video");
 
-        if (videoSender && cameraTrack) {
-          await videoSender.replaceTrack(cameraTrack);
-        }
-
-        try {
-          const offer = await peer.pc.createOffer();
-          await peer.pc.setLocalDescription(offer);
-          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-            wsRef.current.send(
-              JSON.stringify({
-                type: "offer",
-                target_user_id: targetUserId,
-                data: peer.pc.localDescription,
-              })
-            );
-          }
-        } catch (e) {
-          console.warn("Renegotiation offer error on stopScreenShare:", e);
-        }
+      if (videoSender) {
+        await videoSender.replaceTrack(cameraTrack && cameraTrack.readyState === "live" ? cameraTrack : null);
+      } else if (cameraTrack && cameraTrack.readyState === "live") {
+        peer.pc.addTrack(cameraTrack, cameraStream);
       }
     }
 
@@ -529,7 +531,7 @@ export default function MeetingRoomPage() {
         setLocalStream(combinedStream);
         localStreamRef.current = combinedStream;
 
-        for (const [targetUserId, peer] of Array.from(peerConnectionsRef.current.entries())) {
+        for (const [_, peer] of Array.from(peerConnectionsRef.current.entries())) {
           const senders = peer.pc.getSenders();
           const videoSender = senders.find((s) => s.track?.kind === "video");
 
@@ -537,22 +539,6 @@ export default function MeetingRoomPage() {
             await videoSender.replaceTrack(screenTrack);
           } else {
             peer.pc.addTrack(screenTrack, combinedStream);
-          }
-
-          try {
-            const offer = await peer.pc.createOffer();
-            await peer.pc.setLocalDescription(offer);
-            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-              wsRef.current.send(
-                JSON.stringify({
-                  type: "offer",
-                  target_user_id: targetUserId,
-                  data: peer.pc.localDescription,
-                })
-              );
-            }
-          } catch (e) {
-            console.warn("Renegotiation offer error on handleToggleScreenShare:", e);
           }
         }
 

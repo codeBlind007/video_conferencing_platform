@@ -67,9 +67,9 @@ export function ControlBar({
   };
 
   return (
-    <div className="w-full h-full bg-black border-t border-zinc-800 px-3 sm:px-6 flex items-center justify-between text-white select-none relative z-30">
-      <div className="max-w-7xl w-full mx-auto flex items-center justify-between">
-        <div className="flex items-center space-x-2 sm:space-x-4">
+    <div className="w-full h-full bg-black border-t border-zinc-800 px-2 sm:px-6 flex items-center justify-between text-white select-none relative z-30 overflow-x-auto no-scrollbar">
+      <div className="max-w-7xl w-full mx-auto flex items-center justify-between space-x-1 sm:space-x-4 min-w-0">
+        <div className="flex items-center space-x-1 sm:space-x-4 shrink-0">
           <ControlButton
             icon={isMuted ? MicOff : Mic}
             label={isMuted ? "Unmute" : "Audio"}
@@ -88,7 +88,7 @@ export function ControlBar({
           />
         </div>
 
-        <div className="flex items-center space-x-1 sm:space-x-3">
+        <div className="flex items-center space-x-0.5 sm:space-x-3 overflow-x-auto no-scrollbar shrink-0">
           <ControlButton
             icon={Users}
             label="Participants"
@@ -101,7 +101,7 @@ export function ControlBar({
             onClick={onToggleChat}
           />
 
-          <div className="relative">
+          <div className="relative shrink-0">
             <ControlButton
               icon={Heart}
               label="React"
@@ -140,7 +140,7 @@ export function ControlBar({
           )}
 
           {isHost && (
-            <div className="relative">
+            <div className="relative shrink-0">
               <ControlButton
                 icon={ShieldCheck}
                 label="Host tools"
@@ -180,7 +180,7 @@ export function ControlBar({
             </div>
           )}
 
-          <div className="relative">
+          <div className="relative shrink-0">
             <ControlButton
               icon={MoreHorizontal}
               label="More"
@@ -211,7 +211,7 @@ export function ControlBar({
           </div>
         </div>
 
-        <div>
+        <div className="shrink-0 pl-1">
           <button
             onClick={isHost && onEndMeeting ? onEndMeeting : onLeaveMeeting}
             className="flex flex-col items-center group transition-transform hover:scale-105"
@@ -220,7 +220,7 @@ export function ControlBar({
             <div className="w-8 h-8 rounded-xl bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-lg shadow-red-600/30">
               <X className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <span className="text-[11px] font-semibold text-red-500 mt-0.5">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-red-500 mt-0.5">
               {isHost ? "End" : "Leave"}
             </span>
           </button>

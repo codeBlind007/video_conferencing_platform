@@ -25,18 +25,38 @@ export function ParticipantVideo({
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
-    if (videoRef.current && stream) {
-      if (videoRef.current.srcObject !== stream) {
-        videoRef.current.srcObject = stream;
-      }
+    const videoEl = videoRef.current;
+    if (!videoEl || !stream) return;
+
+    if (videoEl.srcObject !== stream) {
+      videoEl.srcObject = stream;
     }
-  }, [stream, isVideoOff]);
+
+    const playVideo = () => {
+      if (videoEl && videoEl.paused) {
+        videoEl.play().catch(() => {});
+      }
+    };
+
+    playVideo();
+
+    const tracks = stream.getVideoTracks();
+    tracks.forEach((t) => {
+      t.onunmute = playVideo;
+    });
+
+    return () => {
+      tracks.forEach((t) => {
+        t.onunmute = null;
+      });
+    };
+  }, [stream, isVideoOff, isScreenSharing]);
 
   const hasVideoTrack =
-    stream &&
-    stream.getVideoTracks().length > 0 &&
-    stream.getVideoTracks()[0].enabled &&
-    !isVideoOff;
+    Boolean(stream) &&
+    stream!.getVideoTracks().length > 0 &&
+    stream!.getVideoTracks()[0].enabled &&
+    (!isVideoOff || isScreenSharing);
 
   return (
     <div className="relative w-full h-full min-h-0 min-w-0 max-h-full max-w-full bg-[#1E293B] border border-slate-700/60 rounded-xl sm:rounded-2xl overflow-hidden flex items-center justify-center shadow-lg group">
@@ -45,7 +65,9 @@ export function ParticipantVideo({
         autoPlay
         playsInline
         muted={isLocal}
-        className={`w-full h-full max-h-full max-w-full object-contain ${
+        className={`w-full h-full max-h-full max-w-full ${
+          isScreenSharing ? "object-contain" : "object-cover sm:object-contain"
+        } ${
           isLocal && !isScreenSharing ? "scale-x-[-1]" : ""
         } ${hasVideoTrack ? "block" : "hidden"}`}
       />

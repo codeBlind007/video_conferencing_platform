@@ -9,6 +9,7 @@ export interface RemoteParticipantStream {
   stream: MediaStream;
   isMuted?: boolean;
   isVideoOff?: boolean;
+  isScreenSharing?: boolean;
 }
 
 interface VideoGridProps {
@@ -68,6 +69,7 @@ export function VideoGrid({
             isMuted={remote.isMuted}
             isVideoOff={remote.isVideoOff}
             isHost={remote.userId === hostUserId}
+            isScreenSharing={remote.isScreenSharing}
           />
         </div>
       ))}

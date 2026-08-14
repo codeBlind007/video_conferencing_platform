@@ -29,10 +29,10 @@ export function ControlButton({
   customIconContainer,
 }: ControlButtonProps) {
   return (
-    <div className="flex items-center space-x-0.5 group">
+    <div className="flex items-center space-x-0.5 group shrink-0">
       <button
         onClick={onClick}
-        className={`flex flex-col items-center p-1.5 sm:px-3 sm:py-1.5 rounded-lg hover:bg-zinc-800 transition-colors ${
+        className={`flex flex-col items-center px-1 py-1 sm:px-3 sm:py-1.5 rounded-lg hover:bg-zinc-800 transition-colors ${
           isActive ? activeColorClass : "text-white"
         }`}
         title={title || label}
@@ -45,7 +45,9 @@ export function ControlButton({
             </span>
           )}
         </div>
-        <span className="text-[11px] font-medium mt-0.5 text-white">{label}</span>
+        <span className="text-[10px] sm:text-[11px] font-medium mt-0.5 text-white max-w-[52px] sm:max-w-none truncate leading-tight">
+          {label}
+        </span>
       </button>
       {hasChevron && (
         <button
