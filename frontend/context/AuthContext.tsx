@@ -21,14 +21,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Restore cached user profile if present
+    // Restore cached user profile if present and token exists
     const cachedUser = localStorage.getItem("zoom_clone_user");
-    if (cachedUser) {
+    const cachedToken = localStorage.getItem("zoom_clone_token");
+    if (cachedUser && cachedToken) {
       try {
         setUser(JSON.parse(cachedUser));
       } catch {
         localStorage.removeItem("zoom_clone_user");
+        localStorage.removeItem("zoom_clone_token");
+        setUser(null);
       }
+    } else {
+      localStorage.removeItem("zoom_clone_user");
+      localStorage.removeItem("zoom_clone_token");
+      setUser(null);
     }
     setLoading(false);
   }, []);

@@ -16,7 +16,26 @@ import { ControlBar } from "@/components/ControlBar";
 import { ParticipantsPanel } from "@/components/ParticipantsPanel";
 import { ChatPanel } from "@/components/ChatPanel";
 
-const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
+function getWebSocketUrl(meetingId: string, token: string): string {
+  let baseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
+
+  // Automatically upgrade ws:// to wss:// if page is loaded over HTTPS
+  if (typeof window !== "undefined") {
+    if (window.location.protocol === "https:") {
+      baseUrl = baseUrl.replace(/^ws:\/\//i, "wss://");
+      if (!baseUrl.startsWith("wss://") && !baseUrl.startsWith("ws://")) {
+        baseUrl = `wss://${baseUrl}`;
+      }
+    } else if (!baseUrl.startsWith("wss://") && !baseUrl.startsWith("ws://")) {
+      baseUrl = `ws://${baseUrl}`;
+    }
+  }
+
+  // Remove trailing slash
+  baseUrl = baseUrl.replace(/\/$/, "");
+
+  return `${baseUrl}/api/ws/meetings/${meetingId}${token ? `?token=${encodeURIComponent(token)}` : ""}`;
+}
 
 interface PeerState {
   userId: number;
@@ -156,14 +175,24 @@ export default function MeetingRoomPage() {
   useEffect(() => {
     if (!localStream || !user) return;
 
-    const token = typeof window !== "undefined" ? localStorage.getItem("zoom_clone_token") : "";
-    const wsUrl = `${WS_BASE_URL}/api/ws/meetings/${meetingId}${token ? `?token=${encodeURIComponent(token)}` : ""}`;
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
+    let ws: WebSocket | null = null;
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("zoom_clone_token") || "" : "";
+      const wsUrl = getWebSocketUrl(meetingId, token);
+      ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
 
-    ws.onopen = () => {
-      console.log("Connected to WebRTC Signaling Server");
-    };
+      ws.onopen = () => {
+        console.log("Connected to WebRTC Signaling Server");
+      };
+
+      ws.onerror = (err) => {
+        console.warn("WebSocket Signaling Connection Error:", err);
+      };
+    } catch (wsErr) {
+      console.error("Failed to construct WebSocket:", wsErr);
+      return;
+    }
 
     // Create RTCPeerConnection for a remote peer
     const createPeer = (targetUserId: number, peerDisplayName: string, isInitiator: boolean) => {

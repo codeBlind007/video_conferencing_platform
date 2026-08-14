@@ -70,8 +70,13 @@ export default function DashboardPage() {
       ]);
       setUpcomingMeetings(upcomingData);
       setRecentMeetings(recentData);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to load meetings", err);
+      if (err.message && err.message.toLowerCase().includes("credentials")) {
+        localStorage.removeItem("zoom_clone_user");
+        localStorage.removeItem("zoom_clone_token");
+        router.replace("/login");
+      }
     } finally {
       setLoadingData(false);
     }
@@ -88,11 +93,12 @@ export default function DashboardPage() {
       setCreatingInstant(true);
       const meeting = await apiRequest<InstantMeetingResponse>("/api/meetings/instant", {
         method: "POST",
+        data: {},
       });
       router.push(`/meeting/${meeting.meeting_id}`);
-    } catch (err) {
+    } catch (err: any) {
       setCreatingInstant(false);
-      alert("Failed to start new meeting. Please try again.");
+      alert(err.message || "Failed to start new meeting. Please try again.");
     }
   };
 
